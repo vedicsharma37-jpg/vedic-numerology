@@ -1,0 +1,686 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);font-size:13px}
+.wrap{padding:.75rem 0}
+h2{font-size:15px;font-weight:500;margin-bottom:.65rem}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin-bottom:.75rem}
+.fl label{font-size:10px;color:var(--color-text-secondary);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+input,select{width:100%;padding:7px 9px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:12px;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#534AB7}
+.city-wrap{position:relative}
+.city-row{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:end;margin-bottom:.4rem}
+.btn-sm{padding:7px 11px;border:none;border-radius:var(--border-radius-md);background:#534AB7;color:#fff;font-size:11px;font-weight:500;cursor:pointer;height:33px;white-space:nowrap}
+.btn-sm:hover{background:#3C3489}
+.coords-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:.4rem}
+.geo-msg{font-size:11px;padding:5px 9px;border-radius:var(--border-radius-md);margin-bottom:.4rem;display:none;line-height:1.4}
+.geo-msg.ok{background:#EAF3DE;color:#1B5E20;display:block}
+.geo-msg.err{background:#FFEBEE;color:#B71C1C;display:block}
+.geo-msg.info{background:#E3F2FD;color:#0D47A1;display:block}
+.sugg-box{position:absolute;top:100%;left:0;right:0;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);box-shadow:0 4px 14px rgba(0,0,0,.15);max-height:220px;overflow-y:auto;z-index:999;display:none}
+.sugg-item{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sugg-item:last-child{border-bottom:none}
+.sugg-item:hover,.sugg-item:active{background:var(--color-background-secondary)}
+.sugg-city{font-weight:500}.sugg-detail{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.sugg-searching{padding:10px;font-size:11px;color:var(--color-text-secondary);text-align:center}
+.mode-row{display:flex;gap:7px;margin-bottom:.7rem;flex-wrap:wrap;align-items:center}
+.mode-row span{font-size:11px;color:var(--color-text-secondary);font-weight:500}
+.tog{padding:5px 13px;border:0.5px solid var(--color-border-secondary);border-radius:20px;font-size:11px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);font-weight:500}
+.tog.on{background:#534AB7;border-color:#534AB7;color:#fff}
+.bcalc{padding:8px 24px;background:#534AB7;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(83,74,183,.2);margin-bottom:1rem}
+.bcalc:hover{background:#3C3489}
+.tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:.9rem;overflow-x:auto}
+.tab{padding:7px 10px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500}
+.tab.on{color:#534AB7;border-bottom-color:#534AB7;font-weight:600}
+.tc{display:none}.tc.on{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.85rem 1rem;margin-bottom:.85rem}
+.card.purple{background:#F5F0FF;border-color:#9C7EF0}
+.card.gold{background:#FFFDF0;border-color:#F0C040}
+.card.green{background:#F0FBF0;border-color:#4CAF50}
+.card.pink{background:#FFF0F5;border-color:#F48FB1}
+.ng{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px;margin-bottom:.65rem}
+.nc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px;border:0.5px solid var(--color-border-tertiary)}
+.nc .l{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+.nc .v{font-size:19px;font-weight:500;margin-top:2px;color:#534AB7}
+.nc .s{font-size:11px;color:var(--color-text-secondary)}
+.db{font-size:12px;color:var(--color-text-secondary);line-height:1.65;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 11px;margin-bottom:.6rem;border-left:2px solid #534AB7}
+.vgrid{display:inline-grid;grid-template-columns:repeat(3,58px);gap:3px}
+.vc{width:58px;height:58px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;font-weight:500;background:var(--color-background-secondary);position:relative;color:var(--color-text-primary)}
+.vc.dr{background:#EEEDFE;border:1.5px solid #534AB7;color:#3C3489}
+.vc.co{background:#EAF3DE;border:1.5px solid #2E7D32;color:#1B5E20}
+.vc.bo{background:#EEEDFE;border:1.5px solid #534AB7;color:#3C3489}
+.vc.mi{opacity:.28}
+.dcb{font-size:7px;background:#534AB7;color:#fff;border-radius:3px;padding:1px 3px;position:absolute;top:2px;right:2px}
+.vcnt{font-size:8px;color:var(--color-text-secondary);letter-spacing:-.5px;margin-top:1px;line-height:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 8px;background:var(--color-background-secondary);font-weight:500;color:var(--color-text-secondary);font-size:11px}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+.arow td{background:#EEEDFE !important;font-weight:500}
+.tg{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.tf{background:#EAF3DE;color:#1B5E20}.tn{background:#FFF3CD;color:#664D03}.tu{background:#FFEBEE;color:#B71C1C}
+.yt{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;margin:2px}
+.yp{background:#EAF3DE;color:#1B5E20}.yn{background:#FFEBEE;color:#B71C1C}
+.ri{padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;line-height:1.6}
+.ri:last-child{border-bottom:none}
+.sw{display:inline-block;background:#EEEDFE;color:#3C3489;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:500;margin:2px}
+.lg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.li{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:7px 9px;border:0.5px solid var(--color-border-tertiary)}
+.li .k{font-size:10px;color:var(--color-text-secondary);font-weight:500}
+.li .v{font-size:12px;font-weight:500;margin-top:2px}
+.yog-row{margin-bottom:.5rem;padding:.55rem .7rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2.5px solid #ccc}
+.yog-row.pos{border-left-color:#2E7D32}.yog-row.neg{border-left-color:#B71C1C}
+.num-deep{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:.5rem;overflow:hidden}
+.num-deep-hdr{padding:8px 11px;background:var(--color-background-secondary);font-weight:500;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.num-deep-body{padding:10px 11px;font-size:12px;line-height:1.65;color:var(--color-text-secondary);display:none}
+.num-deep-body.open{display:block}
+.rel-tag{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;display:inline-block;margin:2px}
+.rel-f{background:#EAF3DE;color:#1B5E20}.rel-n{background:#FFF3CD;color:#664D03}.rel-uf{background:#FFEBEE;color:#B71C1C}
+.yog-mini{display:inline-grid;grid-template-columns:repeat(3,20px);gap:2px;vertical-align:middle;margin-right:7px;flex-shrink:0}
+.ym{width:20px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);opacity:.3}
+.ym.on{background:#534AB7;color:#fff;border-color:#534AB7;opacity:1}
+.ym.off{background:#FFEBEE;color:#B71C1C;border-color:#F48FB1;opacity:1;text-decoration:line-through}
+/* ── VEDIC BIRTH CHART (North Indian Diamond Style) ── */
+.ni-chart-wrap{display:flex;justify-content:center;margin:.75rem 0}
+.ni-chart{position:relative;width:280px;height:280px}
+.ni-chart svg{position:absolute;top:0;left:0}
+.ni-house{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;text-align:center;cursor:default}
+.ni-hnum{font-size:8px;font-weight:700;color:var(--color-text-secondary);margin-bottom:1px}
+.ni-sign{font-size:8px;color:#534AB7;font-weight:600}
+.ni-planets{font-size:9px;font-weight:700;color:#1B5E20;line-height:1.3;margin-top:1px}
+.ni-lagna{background:rgba(83,74,183,.12);border-radius:2px}
+.pred-section{margin-bottom:.75rem}
+.pred-section h3{font-size:12px;color:#534AB7;font-weight:600;margin-bottom:.35rem;padding-bottom:.25rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pred-item{font-size:11px;color:var(--color-text-secondary);line-height:1.6;padding:4px 0 4px 12px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative}
+.pred-item:before{content:'•';position:absolute;left:0;color:#534AB7}
+.pred-item:last-child{border-bottom:none}
+</style>
+
+<div class="wrap">
+<h2>✦ Vedic &amp; Astro Numerology — Complete</h2>
+<div class="fg">
+  <div class="fl"><label>Date of Birth</label><input type="date" id="dob" value="1990-01-15"></div>
+  <div class="fl"><label>Day of Week</label><input type="text" id="dow" readonly style="color:var(--color-text-secondary)"></div>
+  <div class="fl"><label>Birth Hour (0–23)</label><input type="number" id="bhr" min="0" max="23" value="10"></div>
+  <div class="fl"><label>Birth Minute</label><input type="number" id="bmin" min="0" max="59" value="30"></div>
+  <div class="fl"><label>Gender</label><select id="gen"><option>Male</option><option>Female</option></select></div>
+  <div class="fl"><label>Current Year</label><input type="number" id="cyr" value="2026"></div>
+</div>
+<div class="card" style="margin-bottom:.7rem;padding:.7rem .9rem">
+  <div style="font-size:10px;font-weight:600;color:var(--color-text-secondary);margin-bottom:.55rem;text-transform:uppercase;letter-spacing:.05em">Place of Birth</div>
+  <div class="city-row">
+    <div class="city-wrap">
+      <div class="fl" style="margin:0"><label>City / Place (type any city worldwide)</label>
+        <input type="text" id="pob_city" placeholder="e.g. Udhampur, Shimla, Dubai..." autocomplete="off" oninput="onCityType(this.value)" onblur="setTimeout(hideSugg,250)">
+      </div>
+      <div class="sugg-box" id="sugg_box"></div>
+    </div>
+    <div>
+      <label style="font-size:10px;color:var(--color-text-secondary);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:500">GPS</label>
+      <button class="btn-sm" onclick="locateMe()">📍 Locate</button>
+    </div>
+  </div>
+  <div id="geo_msg" class="geo-msg"></div>
+  <div class="coords-row">
+    <div class="fl"><label>Latitude (auto-filled)</label><input type="number" id="pob_lat" step="0.0001" placeholder="auto from city"></div>
+    <div class="fl"><label>Longitude (auto-filled)</label><input type="number" id="pob_lng" step="0.0001" placeholder="auto from city"></div>
+  </div>
+  <div style="font-size:10px;color:var(--color-text-secondary)">Powered by Nominatim geocoding — searches any city, town or village worldwide. Type at least 2 characters.</div>
+</div>
+<div class="mode-row">
+  <span>Mode:</span>
+  <button class="tog on" id="tm1" onclick="setMode(1)">Numerology only</button>
+  <button class="tog" id="tm2" onclick="setMode(2)">Astro Numerology</button>
+</div>
+<button class="bcalc" onclick="calc()">✦ Calculate</button>
+<div id="out" style="display:none">
+  <div class="tabs" id="tabbar"></div>
+  <div id="tabcontents"></div>
+</div>
+</div>
+
+<script>
+var mode=1;
+var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var PL={1:'Surya (Sun)',2:'Chandrma (Moon)',3:'Jupiter',4:'Rahu',5:'Mercury',6:'Venus (Shukr)',7:'Ketu',8:'Shani (Saturn)',9:'Mangal (Mars)'};
+var PLN={1:'Sun',2:'Moon',3:'Jupiter',4:'Rahu',5:'Mercury',6:'Venus',7:'Ketu',8:'Saturn',9:'Mars'};
+var VG=[[3,1,9],[6,7,5],[2,8,4]];
+var VG_FLAT=[3,1,9,6,7,5,2,8,4];
+var MDY=[1,2,3,4,5,6,7,8,9];
+var LHORA=[[1,3,7,6,9,8,5,1,3,7,6,9,8,5],[6,9,8,5,4,3,2,6,9,8,5,4,3,2],[5,1,3,7,6,9,8,5,1,3,7,6,9,8],[2,6,9,8,5,4,3,2,6,9,8,5,4,3],[8,5,1,3,7,6,9,8,5,1,3,7,6,9],[3,2,6,9,8,5,4,3,2,6,9,8,5,4],[9,8,5,1,3,7,6,9,8,5,1,3,7,6],[4,3,2,6,9,8,5,4,3,2,6,9,8,5],[6,9,8,5,1,3,7,6,9,8,5,1,3,7],[5,4,3,2,6,9,8,5,4,3,2,6,9,8],[7,6,9,8,5,1,3,7,6,9,8,5,1,3],[8,5,4,3,2,6,9,8,5,4,3,2,6,9]];
+var NK=['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Moola','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+var NK_LORD=['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury','Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury','Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+var VIM_Y={Ketu:7,Venus:20,Sun:6,Moon:10,Mars:7,Rahu:18,Jupiter:16,Saturn:19,Mercury:17};
+var VIM_O=['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+var L2N={Ketu:7,Venus:6,Sun:1,Moon:2,Mars:9,Rahu:4,Jupiter:3,Saturn:8,Mercury:5};
+var FRND={1:[9,2,5,3,6,1],2:[1,5,3,2],3:[1,5,3,2,7],4:[7,1,5,6,4],5:[1,2,6,3,5],6:[1,7,5,6],7:[4,6,1,3,5],8:[5,3,6,7],9:[1,5,3]};
+var NFRND={1:[8],2:[4,8,9],3:[6],4:[2,9],5:[],6:[3],7:[],8:[1,2],9:[2,4]};
+var SIGNS=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+var SIGNS_HI=['Mesh','Vrishabh','Mithun','Kark','Simha','Kanya','Tula','Vrishchik','Dhanu','Makar','Kumbh','Meen'];
+var SIGN_SHORT=['Ar','Ta','Ge','Ca','Le','Vi','Li','Sc','Sg','Cp','Aq','Pi'];
+var SIGN_LORD=['Mars','Venus','Mercury','Moon','Sun','Mercury','Venus','Mars','Jupiter','Saturn','Saturn','Jupiter'];
+var PLANET_ABB={Sun:'Su',Moon:'Mo',Mercury:'Me',Venus:'Ve',Mars:'Ma',Jupiter:'Ju',Saturn:'Sa',Rahu:'Ra',Ketu:'Ke',Ascendant:'As'};
+var PLANET_COLOR={Sun:'#E65100',Moon:'#1565C0',Mercury:'#2E7D32',Venus:'#AD1457',Mars:'#C62828',Jupiter:'#F57F17',Saturn:'#4A148C',Rahu:'#37474F',Ketu:'#BF360C'};
+
+// ── NOMINATIM GEOCODING (real API, any city worldwide) ──────────────────────
+var sT=null,lastQ='';
+function onCityType(v){
+  clearTimeout(sT);
+  if(v.length<2){hideSugg();return;}
+  // Show searching indicator immediately
+  var box=document.getElementById('sugg_box');
+  box.innerHTML='<div class="sugg-searching">🔍 Searching...</div>';
+  box.style.display='block';
+  sT=setTimeout(function(){doGeoSearch(v);},500);
+}
+function doGeoSearch(q){
+  if(q===lastQ)return;lastQ=q;
+  // Search with Nominatim — works for any city/town/village worldwide
+  var url='https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+
+    '&format=json&limit=8&addressdetails=1&featuretype=city,town,village,hamlet,suburb&accept-language=en';
+  fetch(url,{headers:{'User-Agent':'VedicNumerologyApp/1.0','Accept-Language':'en'}})
+  .then(function(r){return r.json();})
+  .then(function(data){showSuggNominatim(data);})
+  .catch(function(){
+    document.getElementById('sugg_box').innerHTML='<div class="sugg-searching">Connection issue. Please enter coordinates manually.</div>';
+  });
+}
+function showSuggNominatim(data){
+  var box=document.getElementById('sugg_box');
+  if(!data||!data.length){box.innerHTML='<div class="sugg-searching">No results found. Try a different spelling or nearby city.</div>';return;}
+  box.innerHTML=data.map(function(d){
+    var addr=d.address||{};
+    var city=addr.city||addr.town||addr.village||addr.hamlet||addr.suburb||d.display_name.split(',')[0];
+    var state=addr.state||addr.county||'';
+    var country=addr.country||'';
+    var detail=[state,country].filter(Boolean).join(', ');
+    var lat=parseFloat(d.lat).toFixed(4);
+    var lng=parseFloat(d.lon).toFixed(4);
+    return'<div class="sugg-item" onmousedown="pickCity(\''+city.replace(/'/g,"\\'")+'\',\''+detail.replace(/'/g,"\\'")+'\','+lat+','+lng+')">'+
+      '<div class="sugg-city">'+city+'</div>'+
+      '<div class="sugg-detail">'+detail+' &nbsp;·&nbsp; '+lat+'°, '+lng+'°</div></div>';
+  }).join('');
+  box.style.display='block';
+}
+function pickCity(city,detail,lat,lng){
+  document.getElementById('pob_city').value=city+(detail?', '+detail:'');
+  document.getElementById('pob_lat').value=lat;
+  document.getElementById('pob_lng').value=lng;
+  hideSugg();
+  showGeoMsg('ok','✓ '+city+(detail?', '+detail:'')+' — Lat: '+lat+'°, Lng: '+lng+'°');
+}
+function hideSugg(){document.getElementById('sugg_box').style.display='none';}
+function showGeoMsg(t,m){var el=document.getElementById('geo_msg');el.className='geo-msg '+t;el.textContent=m;}
+function locateMe(){
+  showGeoMsg('info','📍 Requesting GPS...');
+  if(!navigator.geolocation){showGeoMsg('err','GPS not supported. Please type your city above.');return;}
+  try{
+    navigator.geolocation.getCurrentPosition(
+      function(pos){
+        var lat=pos.coords.latitude.toFixed(4);var lng=pos.coords.longitude.toFixed(4);
+        document.getElementById('pob_lat').value=lat;document.getElementById('pob_lng').value=lng;
+        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json',{headers:{'Accept-Language':'en'}})
+        .then(function(r){return r.json();}).then(function(d){
+          var a=d.address||{};var city=a.city||a.town||a.village||a.county||'Your Location';var country=a.country||'';
+          document.getElementById('pob_city').value=city+(country?', '+country:'');
+          showGeoMsg('ok','✓ '+city+(country?', '+country:'')+' — Lat: '+lat+'°, Lng: '+lng+'°');
+        }).catch(function(){showGeoMsg('ok','✓ GPS detected — Lat: '+lat+'°, Lng: '+lng+'°');});
+      },
+      function(e){showGeoMsg('err',{1:'Permission denied. Please type city above.',2:'GPS unavailable. Please type city manually.',3:'GPS timed out.'}[e.code]||'Cannot detect location.');},
+      {timeout:12000,maximumAge:300000,enableHighAccuracy:false}
+    );
+  }catch(e){showGeoMsg('err','GPS unavailable. Please type your city above.');}
+}
+
+// ── NUMEROLOGY DATA (compact) ────────────────────────────────────────────────
+var NI={
+1:{gem:'Ruby',day:'Sunday',color:'Red, Gold, Orange',metal:'Gold',stone:'Sun Stone',lucky:'1,10,19,28',un:'White, Silver, Black',desc:'You are ruled by Surya — the King. Control aggression to rise immensely. You like branded, quality things. Work 6am–6pm but energy drops after sunset.',deep:'Surya rules the 1st house. You will behave like an elder in the house irrespective of age. Govt job is a higher probability — you can become a director or CEO at a very early age. Sun in the 1st house means you will have heart disease or heartbreak. Take care of your stress and eyes. Finish dinner before sunset.',prof:'Government jobs, politics, authoritative roles, CEO, director, admin, team handling, client management, positions of power.',rem:'Stand in front of the rising Sun and pray. Respect elders. Donate gur. Wear Ruby or Sun Stone. Have a to-do list. Should not eat food after sunset. Wear gold. Put kesar, haldi, Chandan tikka always. Chant Surya Atharvashirsha or Aditya Hridaya Stotra every morning before 8am.',health:'Heart disease, stress, teeth problems, eye issues. Dinner should be completed before sunset.'},
+2:{gem:'Pearl / Moonstone',day:'Monday',color:'White, Silver, Cream',metal:'Silver',stone:'Moonstone',lucky:'2,11,20,29',un:'Red, Orange',desc:'You are ruled by Chandrma — the Queen. Emotional ups and downs. You are all about intuition. Cannot live alone — always need support.',deep:'Moon rules the 6th house. Moon shows your moral support, whether you are mentally strong. Family support is there. Chandrma people are considered Bhagwan Shiv. So if there is any negativity in life, to worship Bhagwan Shiv is the foremost remedy.',prof:'Nursing, pharmaceutical, paramedical, psychologists, physicians, public relations, hotel management, restaurant business, medicine, navy, art, music, dancing.',rem:'Wear Moonstone and silver. Respect ladies. Pray on Poornmashi or Amavasya. Apply raw milk on body before shower. Drink water in silver glass. Donate milk, curd, honey in a Shiv temple. Pray to Lord Shiva. Chant Chandrashekhar Ashtam.',health:'Emotional issues, mood swings, health issues related to water and fluids.'},
+3:{gem:'Yellow Sapphire / Yellow Citrine',day:'Thursday',color:'Yellow, Golden',metal:'Gold',stone:'Yellow Citrine',lucky:'3,12,21,30',un:'Blue, Black',desc:'You are ruled by Jupiter — Devta ke Guru. Accumulate knowledge over years. Your job is to heal and give knowledge. Enjoy good food but be careful — if you gain weight it will not stop.',deep:'Jupiter rules the 2nd house. Tells about your children, how much do you follow your religion, how well can you use and deliver your knowledge. They are highly skillful or knowledgeable in their field. Irrespective of the field they are in, they are interested in occult.',prof:'Healer, teacher, advisor, banker, lawyer, astrologer, good doctor (physician only). Teaching, coaching, counseling, spiritual healing.',rem:'Pray to Lord Vishnu. Wear Yellow Citrine. Face Northeast for work or pooja. Always wear GOLD. Wear tikka of haldi, kesar or Chandan every day. Thursday banana pooja.',health:'Obesity issues if food habits are not controlled. Liver and fat-related issues can arise.'},
+4:{gem:'Hessonite (Gomed) / Tiger Eye',day:'Saturday',color:'Blue, Smoky, Dark',metal:'Iron/Lead',stone:'Tiger Eye',lucky:'4,13,22,31',un:'Red, Pink',desc:'You are ruled by Rahu — the most powerful planet. You can manipulate anyone. Highly energetic. To control Rahu: live in a cool place, avoid spicy food, drink water all day, write a daily to-do list.',deep:'Rahu rules the 4th house. Your health, how well socially will you be recognized, how much technical knowledge do you have, will there be accidents/injuries in life, secret enemies in life, how many legal cases will you have.',prof:'IT, digital marketing, technology, detective, radio, telephone, airport jobs, night shift, event management, research.',rem:'Wear Tiger Eye. Pray to Ganesh Bhagwan. Khatu Shyam ki pooja. Chant Hanuman Chalisa at least 5 times a day. Keep away from alcohol. Rahu Gayatri Mantra 108 times.',health:'Anxiety, depression, insomnia, accidents. Disciplined life and proper energy usage needed.'},
+5:{gem:'Emerald / Green Aventurine',day:'Wednesday',color:'Green',metal:'Brass',stone:'Green Aventurine',lucky:'5,14,23',un:'Red, Black',desc:'You are ruled by Mercury — Buddh Dev. Number of balance. Mercury is like an 8-9 year old child — loves to play and enjoy. Mercury has no enemies.',deep:'Mercury rules the 9th house. Education, your skills, learning power, writing and communication power. Mercury in the 1st house supports business big time.',prof:'Journalism, writer, teacher, web designer, painting, book seller, accountant, astrologer. Business is a good field.',rem:'Pray to Lord Ganesha. Ganesh Chalisa, Ganesh Atharvashirsha. Wednesday offer Ladoo and Durvaas. Donate study material to kids. Feed birds with soaked sabut moong. Budh Gayatri Mantra jaap.',health:'Mercury is lazy — physical fitness needs attention. Blood or skin related diseases possible.'},
+6:{gem:'Diamond / White Sapphire / Pyrite',day:'Friday',color:'White, Pink, Cream',metal:'Silver/Copper',stone:'Pyrite / Gold',lucky:'6,15,24',un:'Green, Brown',desc:'You are ruled by Venus (Shukr) — Kalyug ke Devta. It brings comfort and luxury. If a female is born with 6, she becomes Laxmi of the house.',deep:'Venus rules the 7th house. Your life partner, personal relationship, marital life, your profession, your enemies, female health issues, your respect, name, fame, prosperity.',prof:'All luxury items, beauty products, acting, fashion designing, architect or interior designer, modelling, tour and travel, musician, artist, gemstones, crystals, perfume, confectionery, bakery.',rem:'Friday do Laxmi Narayan pooja or kanya poojan. Pyrite, rose quartz — keep with yourself. Wear gold or silver. On Friday, make kheer or mithai, offer to Mata Rani. Chant Shukr Gayatri Mantra 108 times.',health:'Avoid laziness. Skin, eyes, and reproductive health issues possible.'},
+7:{gem:"Cat's Eye",day:'Monday',color:'Violet, Ash, Grey',metal:'Silver/Mixed',stone:"Cat's Eye",lucky:'7,16,25',un:'Red, Orange',desc:"You are ruled by Ketu — a dependent planet with no head, thus directionless. There will be disappointment in life in at least 1 of the 4 aspects: personal, professional, health, or family. You are a pure soul.",deep:'Ketu rules the 8th house. Knowledge, creativity, foreign travel. Ketu always wants to help others. Ketu believes in people easily. Ketu has the power to create compatibility with anyone. They do not have enemies in numerology.',prof:'Must never stop learning. Zoologist, program developer, foreign language specialist, healer, alternate medicine, ayurveda, yoga, chakra healing, occult sciences, surgeon, detective.',rem:"Wear Cat's Eye. Offer flag to the left foot of Hanuman ji. Chant Hanuman Chalisa. Soak sabut moong on Tuesday night and feed to birds the next day. Go to temple daily. Ketu Gayatri Mantra 108 times.",health:'Health issues will always be there. One ailment will go, and another will come.'},
+8:{gem:'Blue Sapphire / Amethyst',day:'Saturday',color:'Black, Dark Blue',metal:'Iron',stone:'Amethyst',lucky:'8,17,26',un:'White, Pink',desc:'You are ruled by Shani — Nyaya ke Devta (God of Justice). Slow and steady. Never multi-task. If you follow a routine, you will grow. Hard work is your mantra.',deep:'Saturn rules the 3rd house. Your professional life, will you be good in business, how well will you perform in your workplace, how many enemies will you have, will you have any diseases.',prof:'Agriculture, construction, mining, shoe making, stonework, wood-related work. Lawyer, judge, police. Contractor work.',rem:'Pray to Bhagwan Hanuman ji or Bhairav ji. Keep amethyst with you. Do not walk barefoot in home. Give water to Peepal or Neem tree before sunrise. Donate slippers and blankets. Wear gold. Hanuman Chalisa 5 times a day. Shani Gayatri Mantra 108 times.',health:'Bone related problems, cervical issues. Keep physically active always. You should always sweat.'},
+9:{gem:'Red Coral / Mauli',day:'Tuesday',color:'Red',metal:'Copper',stone:'Red Coral',lucky:'9,18,27',un:'Green, Blue',desc:'You are ruled by Mangal (Mars) — Dharti Putra. You have immense energy and anger. Control your anger. Every 2-5 years of uncontrolled anger you will see struggle.',deep:'Mars rules the 5th house. Your energy, courage, will power, health, accident, property issues. If you are disciplined and calculated, the results will be in your favor. With 9, you are courageous and if you are disciplined, you will do wonders.',prof:'Security, army, military, private security, police. Professional sports. Engineering, fire-related jobs. Sale/purchase of land. Good surgeon. Dentist.',rem:'Your lord is Hanumanji. Pray to Hanuman ji and Lord Ram. Keep South direction clean. Keep Shivling in house or go to temple daily. Put saffron tikka on forehead everyday. On Tuesday donate chane ki dal in mandir. Chant Mangal Gayatri Mantra 108 times.',health:'Blood related issues, blood pressure, reproductive organ diseases. High risk of accidents.'}
+};
+var COMB={'11':'2 kings in one. Very high energy. Cannot be controlled. Good communication but highly egoistic. Patience is the key.','12':'Awesome combination. Chandrma needs support and Surya is here. Very attractive — not for looks but for nature and lifestyle.','13':'Very good. Jupiter ruling, Surya supporting. Name fame prosperity. Amazing healer.','14':'Grahan Dosh. Both Surya and Rahu have limitless powers. Highly diplomatic.','15':'Very good and very bad — can make you Ram or Raavan. If calm and controlled — immense name and fame.','16':'Friends numerologically but enemies astrologically. Shukr brings luxury but also vices and addictions.','17':'Ketu is a disappointment planet. Good for research and deep knowledge. YOU NEED A GURU.','18':'Anti combination. Struggles all their life. Never complain, just keep working.','19':'Surya and Mangal — Hitler combination. Authoritarian. Highly aggressive.','21':'Good. Moon needs support and Surya is here. High level of mood swings but Sun supports.','22':'NEED a support system to complete tasks. Cannot live alone.','23':'Nice. Cannot match their knowledge. Problem: mood swings. Extremely good teachers.','24':'Grahan Dosh. Rahu puts grahan on Chandrma. Struggles in life.','25':'Very good. Mother and son. Need appreciation for everything they do.','26':'Shukr brings luxury. Can become very stubborn. Highly attractive.','27':'Both numbers need support — not a good Yog. Always scared about the future.','28':'Moon and Shani are dushman — worst combination. Always health issues.','29':'Not good. Fire and water. Relationship issues, marital life issues, high tension.','31':'Very good. Jupiter ruling, Surya supporting. Growth. Amazing healer.','32':'Very nice. Cannot match their knowledge. Problem: mood swings.','33':'Double imagination. Want to create their own world. NEVER go into multitasking.','34':'Guru Chandaal Dosh. No value at home but huge charisma outside.','35':'Friends but 20% friends, 80% enemies. Pure guru-shishya relationship.','36':'Enemy combination — you are your own enemy. Cannot keep relationships or health.','37':'Very good. If you hold someone\'s hand and say everything will be ok — it works like magic.','38':'Very good. Ocean of knowledge but harsh delivery. Professionally unstoppable.','39':'Awesome. Both sattvic, humanitarian planets. Amazing healers.','41':'Rahu being supported by Surya. Very sharp mind. Great management system.','42':'Not good. A lot of struggles. Cannot stay stable in relationships.','43':'Guru Chandaal Dosh with Chandaal ruling. Extreme aggression.','44':'2 Rahus. 10 friends and 90 enemies. Lots of struggles.','45':'Good. No one can compete with them. Raj Yog.','46':'Rahu and Venus are guru and shishya. Raj Yog. Both bring luxury.','47':'Rahu and Ketu make the body complete. Nothing is impossible. Fame guaranteed.','48':'Anti-combination. Many struggles.','49':'Highly egoistic. Health issues. Very high anger.','51':'Mercury supported by Sun. Very good. Brings balance in family and society.','52':'Mercury and Chandrma. Very high expectations for any little work done.','53':'Person who supports even at 3am. Awesome communication skills.','54':'Mercury influenced by Rahu. Quick and hasty decisions. Success missed due to laziness.','55':'2 mercuries. Very moody.','56':'Shukr brings luxury. Success keeps coming. New ideas all the time.','57':'Good. Both are students — once they find a guru, they are unstoppable.','58':'Some struggle but good. Multiple sources of income.','59':'Very good. Very successful if they don\'t talk too much.','61':'Numerologically good but astrologically enemies. Fox-minded.','62':'Magnet combination.','63':'Anti-combination but good. Ideological differences. Professional life — no looking back.','64':'Rahu in destiny. Lot of success. Want to be a trendsetter.','65':'Fantastic. Good networkers.','66':'Double 6 — lot of name and fame especially in media, fashion, film.','67':'Guru sitting with its blind student. Multi hidden talents.','68':'Good. Shukr brings luxury but Shani can take it away.','69':'Male energy meets female energy. Personal life not good. Professionally very successful.','71':'Good. Professional success possible but personal/family life not good.','72':'Both need support — not good. MENTOR NEEDED.','73':'Very good. Ketu ruling, Jupiter supporting. Good healer and teacher.','74':'Completes the body. Very good. Rahu brings some problems.','75':'Good. Ketu needs support, Mercury brings balance.','76':'Good. Shukr is here to support. Good for coaches.','77':'Double 7 — pure soul. Can be used easily.','78':'Ketu supporting Shani. More struggles. Success late.','79':'Both keep each other neutral. Very rude with uncontrollable anger.','81':'Hardworking. Shani people cannot be satisfied. Always work for more.','82':'One of the worst. Moon and Shani are dushman. Always health issues.','83':'Very good. Ocean of knowledge but harsh delivery.','84':'Anti-combination. Many struggles.','85':'Mercury and Shani are brothers. Some struggle but good.','86':'Good. Shukr brings luxury but Shani in destiny can take it away.','87':'Ketu and Shani — both restless souls. More struggles.','88':'Extremely rude, highly egoistic. Working without results.','89':'Iron willpower. Fights through all obstacles.','91':'Ultimate warrior-leader. Courageous, bold, ambitious.','92':'Not good. Fire and water. Relationship and health issues.','93':'Awesome. Both sattvic, humanitarian planets.','94':'High energy and dominating. Strong will power. Controversial.','95':'Mercury has all except power — with Mars power, nothing can stop them.','96':'Creative passion. Entertainment and creative life. Personal life not good.','97':'Both in neutral. Very rude with uncontrollable anger.','98':'Shani endurance meets Mars energy. Slow but unstoppable.','99':'Double Mars — master energy number. Immense power. Channel carefully.'};
+var GOCHAR={1:'Year 1 — name and fame. Growth in business. Job promotion. Good for new beginnings.',2:'Year 2 — not good. Flickering minded. Health issues. Financial growth but expenses increase too.',3:'Year 3 — good. Auspicious events. Business expansion. Marriage supported.',4:'Year 4 — not good. Anxiety and depression common. Marital life affected.',5:'Year 5 — good. Success in exams. Develop skills. Business expansion. Good for networking.',6:'Year 6 — excellent. Supports family and relationships. Support from spouse.',7:'Year 7 — spirituality and education. Export-import supported. Foreign travel possible.',8:'Year 8 — not good. Mentally disturbed with high stress. Unwanted responsibilities.',9:'Year 9 — very good. Success in projects and job. High chance in competitive exams.'};
+var PY={1:'Personal year 1 — Sun comes as a friend. New beginnings with growth in personal, health, business, and professional life. Energy is very high.',2:'Personal year 2 — Chandrma is activated. You will have ups and downs. Do not do anything new this year. Think twice before making any decisions.',3:'Personal year 3 — for education, networking, and spiritual journey. Best year to take and get knowledge. Business grows and career is supported.',4:'Personal year 4 — Rahu is activated. Creates Bhram. Life has ups and downs. With a to-do list, Rahu can give you unexpected growth.',5:'Personal year 5 — Mercury brings balance. A very good year. This year brings change, growth, new development. Supports job, business, and even marriage.',6:'Personal year 6 — very good. Brings luxury and comfort. Shukr is Kalyug ke Devta. Name fame attraction.',7:'Personal year 7 — Ketu, Shani, and Mangal are there to keep a check on you. Will be judged at every level. Meditate. Work on your skills.',8:'Personal year 8 — Shani is activated. Hard work is the only way. Will face blockages and delays but discipline and patience bring results.',9:'Personal year 9 — Mangal is here. Very good year for completing projects. Success in job. Can acquire property. Start new ventures.'};
+var LAXMI={1:'Laxmi Ank 1 — gives administrative power. You can handle people and situations.',2:'Laxmi Ank 2 — your intuition power is your best power. You must be polite and help people.',3:'Laxmi Ank 3 — the more you connect with people and solve their problems, the more you will grow.',4:'Laxmi Ank 4 — Rahu should follow discipline. Be organized, create a timetable, follow a routine.',5:'Laxmi Ank 5 — very nice. Network and communication are the key to success.',6:'Laxmi Ank 6 — communication and networking should be strong. Make people yours, keep people happy.',7:'Laxmi Ank 7 — whatever field you go into, have deep knowledge. Just keep developing your skills.',8:'Laxmi Ank 8 — Shani is hard work. You must earn your own money. Leave the house every day for at least an hour.',9:'Laxmi Ank 9 — has energy. Help people below you. Humanitarian. No aggression and no anger.'};
+var STR={1:'Strength 1 — Surya energy. Follow discipline. Will be hurt in personal relationships — learn from mistakes.',2:'Strength 2 — Chandrma. Do not like disturbance or changes. Must become receptive to changes.',3:'Strength 3 — Jupiter. Creativity is your forte. Emotional and give 100% to relationships.',4:'Strength 4 — Rahu. Having Rahu as strength number is considered very lucky. Will align you to your goals.',5:'Strength 5 — Mercury. Does not like to stay at one place. Can blend and connect with anyone.',6:'Strength 6 — very good number. Love family members. Always support, help, take care of people close.',7:'Strength 7 — Ketu is activated and highly spiritual. Intuition power is very strong.',8:'Strength 8 — Karam Pradhan. Want to keep working and get everything for family.',9:'Strength 9 — pure soul. Keep family and parents as priority. Universe conspires that you never have enemies.'};
+var MISS={1:'Stand in front of rising Sun and pray. Respect elders. Donate gur. Wear Sun Stone.',2:'Wear Moonstone and silver. Respect ladies. Apply raw milk on body before shower. Drink water in silver glass.',3:"Wear yellow citrine. Apply Chandan/haldi/kesar ka tikka on 5 spots: forehead, under tongue, Adam's apple, chest, navel.",4:'Wear Tiger Eye or Muchmani. Pray to Ganesh Bhagwan. Khatu Shyam ki pooja.',5:'Wear green aventurine. Plant Tulsi. Offer 2 ladoos and Durvaas every Wednesday to Ganesh ji.',6:"Have Pyrite or Gold around you. On Friday eat sweets with family. Keep flowers in house.",7:"Wear Cat's Eye. Offer flag to left foot of Hanuman ji. Chant Hanuman Chalisa. Soak sabut moong on Tuesday night and feed to birds.",8:'Wear Amethyst. Buy slippers for maids or security guards. Feed them food.',9:'Chant Hanuman Chalisa and Sundar Kand. Wear red. Eat red food. Wear Mauli. Join gym.'};
+var MDY_COMPAT={1:{f:[1,2,3,5],n:[6],uf:[4,7,8,9]},2:{f:[2,3,5,6],n:[],uf:[1,4,7,8,9]},3:{f:[3,5,6,2],n:[],uf:[1,4,7,8,9]},4:{f:[6],n:[3,7],uf:[5,1,2,4,8,9]},5:{f:[5,7,6,3,1],n:[9,2],uf:[4,8]},6:{f:[6,3,5],n:[2,7],uf:[1,4,8,9]},7:{f:[3,6,7,5,9],n:[1],uf:[8,4,2]},8:{f:[6,3],n:[5],uf:[1,9,8,4,7,2]},9:{f:[9,3,8,5],n:[1,6,7,4],uf:[2]}};
+var SW_ALL=['Karpani (mood swings to happiness)','Marjati (to improve relationships)','Indra Indrani (to bring money, luxury)','Muktanam Paramagati (to be professionally independent)','Kalmaash (to avoid conflict with elders/boss)','Mahasvaan (high confidence in life)','Kalyani (to be a good person, remove toxicity)','Kashyap Nandan (for professional growth and education)','Labdha Tirtha (to find opportunities to use your knowledge)','Lokajña (to understand others\' point of view)','Chekit Anam (for students — to memorize what they study)','Jnana Ishvari (supports children who are studying)','Srjna Pratibha Swasthi (to activate Jupiter, creativity)','Sadhik Siddhi (to fulfill desires)','Sampurna Phala Bhaj (for missing recognition)','Siddhi Yog Sugati (for issues with any planet)'];
+
+// ── CORRECTED YOG LOGIC ──────────────────────────────────────────────────────
+var ALL_YOGS=[
+{cat:'Main Yog',type:'p',pres:[3,1,9],abs:[],name:'3-1-9 Intellectual Yog',desc:'Surya has Jupiter on one side and Mars on the other — the king has both ministers. Name fame prosperity will come undoubtedly. YOU MUST STAY ACTIVE. Professionally successful but relationship issues will pertain. Late marriage or if early marriage problems in married life.',rem:'Stay active professionally and personally. Work on relationships consciously.'},
+{cat:'Main Yog',type:'p',pres:[6,7,5],abs:[],name:'6-7-5 Comfort Yog',desc:'6 is guru and 7 and 5 are its shishyas. Highly creative people. Know how to increase luxury or business. Extremely high chances of love marriage. Addiction is extremely high — can see huge losses because of it.',rem:'Control addictions. Build relationship in first year of marriage.'},
+{cat:'Main Yog',type:'n',pres:[2,8,4],abs:[],name:'2-8-4 Hardworking Success Yog',desc:'Chandrma, Rahu and Shani — no one is supporting each other. You need to continue to work hard. Chronic diseases can happen and you are accident prone.',rem:'Work hard consistently. Take care of health. Be disciplined.'},
+{cat:'Main Yog',type:'p',pres:[3,6,2],abs:[],name:'3-6-2 Education Success Yog',desc:'Three gurus in this Yog. Immense knowledge. Formidable teachers, advisors, highly intelligent — called "Google Baba". Very sensitive. Communication is strong. Talk less but when they speak — very impressive.',rem:'If Jupiter is active, not a spendthrift. Watch female health issues.'},
+{cat:'Main Yog',type:'p',pres:[1,7,8],abs:[],name:'1-7-8 Six Sense Yog',desc:'Ketu in the middle — no direct interaction between Surya and Shani. These people are spiritual, always think of multiple sources of income. Get less support from family. Mind is very sharp — with efforts they can reach the top.',rem:'Focus on spirituality to sharpen sixth sense. Keep family relationships actively maintained.'},
+{cat:'Main Yog',type:'n',pres:[9,5,4],abs:[],name:'9-5-4 Bandhan Dosh Yog',desc:'Mars, Mercury, and Rahu. Workaholic. Can get evil eye and jealousy easily. Family life suffers. Will have to go to hospital or courts often. Sibling disputes do happen.',rem:'Do community work. Practice protection from evil eye. Keep siblings at peace.'},
+{cat:'Main Yog',type:'p',pres:[3,7,4],abs:[],name:'3-7-4 Kalsarp Success Yog',desc:'Rahu Ketu complete itself. Professional success is impressive. Money is not a problem. BEST YOG in Vedic grid. All affirmations will come true (even though late).',rem:'Stay positive always. Work towards spirituality. Never argue or criticize.'},
+{cat:'Main Yog',type:'p',pres:[9,7,2],abs:[],name:'9-7-2 Courageous Yog',desc:'Moon and Ketu need support — Mars is giving support. Self-confidence is high. Real heroes, self-made people. Hard work is in them — success can be amazing.',rem:'Build patience. Focus on one thing. Take care of health.'},
+{cat:'Conjunction',type:'p',pres:[3,1],abs:[9],name:'3-1 Conjunction (3 1 X)',desc:'Incredibly good teacher and healer. Always helpful. Get name, fame, and prosperity. Simple living, high thinking. They do have ego for having immense knowledge — should stay in discipline.',rem:'Surya Atharvashirsha. Ann Daan. Vishnu Sahasranamam.'},
+{cat:'Conjunction',type:'n',pres:[1,9],abs:[3],name:'1-9 Conjunction (X 1 9)',desc:'Very high-power combination. Overly aggressive. Anger issues. Self confidence is high. Relationship issues arise. Ensure conversation does not turn into argument.',rem:'Laxmi Narayan worship. Pranayama. Donate. Read Hanuman Chalisa before sleeping.'},
+{cat:'Conjunction',type:'n',pres:[6,7],abs:[5],name:'6-7 Conjunction (6 7 X)',desc:'Shukr and Ketu. Knowledge is immense. Ego from knowledge is also immense. Highly attracted to opposite gender. Any addiction will not go. Relationship issues will stay.',rem:'Bhagwan Ram ki pooja for stability.'},
+{cat:'Conjunction',type:'n',pres:[7,5],abs:[6],name:'7-5 Conjunction (X 7 5)',desc:'Ketu and Mercury are disciples. Like kids, they argue a lot. Can be argumentative and rude. Should not share secrets but cannot keep them.',rem:'Worship Ganesha. Every Wednesday give Ladoo or Durvaas.'},
+{cat:'Conjunction',type:'n',pres:[2,8],abs:[4],name:'2-8 Conjunction — Vish Yog (2 8 X)',desc:'Vish Yog. People are emotionally weak. Struggle always in health or relationships. If they leave their hometown, their growth will begin.',rem:'Worship Lord Shiva. Shiv Panchamrit. Jal Abhishek.'},
+{cat:'Conjunction',type:'n',pres:[8,4],abs:[2],name:'8-4 Conjunction (X 8 4)',desc:'Shani Rahu Yog. Can make you lazy. Lot of struggles. Will not trust anyone. Relationship issues. Work hard = Success.',rem:'Chant Hanuman Chalisa. Read Sunderkand. Worship Hanuman.'},
+{cat:'Conjunction',type:'p',pres:[3,6],abs:[2],name:'3-6 Conjunction (3 6 X)',desc:'Anti gurus sitting together. Loads of knowledge. Professional life is phenomenally successful. Personal relationships are a problem. Like isolation.',rem:'Bhagwan Ram or Shiv should be worshipped to reduce negativity.'},
+{cat:'Conjunction',type:'p',pres:[6,2],abs:[3],name:'6-2 Conjunction (X 6 2)',desc:'Both are God of attraction. Art lovers — fine arts can be their forte. Highly attracted to opposite sex and vice versa.',rem:'Worship Lord Ram for success in life.'},
+{cat:'Conjunction',type:'p',pres:[1,7],abs:[8],name:'1-7 Conjunction (1 7 X)',desc:'Sun and Ketu — good combination. Noble heart, highly spiritual, community helpers, egoless, charity lovers. Loads of name and fame.',rem:'The more you worship the Sun, the more growth you will find.'},
+{cat:'Conjunction',type:'n',pres:[7,8],abs:[1],name:'7-8 Conjunction (X 7 8)',desc:'Ketu and Saturn. Lots of struggles. They create their own struggles. They never follow people\'s advice.',rem:'Chant Hanuman Chalisa. Become spiritual to reduce struggles.'},
+{cat:'Conjunction',type:'n',pres:[9,5],abs:[4],name:'9-5 Conjunction — Vaani Dosh (9 5 X)',desc:'Mangal and Mercury. Communication is excellent. Aggression can be seen in the communication. Can hurt anyone. If channelize their energy, they can do wonders.',rem:'Worship Ganesha or Hanuman. Channel aggression into disciplined work.'},
+{cat:'Conjunction',type:'p',pres:[5,4],abs:[9],name:'5-4 Conjunction (X 5 4)',desc:'Mercury and Rahu. Communication is excellent. Very straightforward. High risk taking capacity. In a team, can grow immensely and quickly.',rem:'Ganesh Ashtam or Ganesh pooja for benefit.'},
+{cat:'Conjunction',type:'n',pres:[9,7],abs:[2],name:'9-7 Conjunction (9 7 X)',desc:'Mangal and Ketu have high energy. Restless in nature. Dedication to work is high. Can get angry easily. Focus on one work. Accident prone.',rem:'Work on spirituality. Take care of health. Worship Hanuman ji and Ram ji.'},
+{cat:'Conjunction',type:'n',pres:[2,7],abs:[9],name:'2-7 Conjunction (X 7 2)',desc:'Chandrma and Ketu. Disappointment, mood swings. Always cry for the past. Health problems are very highly probable. Emotional setbacks are immense.',rem:'Panchamrit Abhishek to Shiv ji.'},
+{cat:'Conjunction',type:'p',pres:[3,7],abs:[4],name:'3-7 Conjunction (3 7 X)',desc:'Jupiter and Ketu. Immense knowledge — good healer. Can be teacher, healer. Highly spiritual. Not money-minded — if they are, there will be struggle.',rem:'Worship Laxmi Narayan or Ram ji ki pooja.'},
+{cat:'Conjunction',type:'p',pres:[7,4],abs:[3],name:'7-4 Conjunction (X 7 4)',desc:'Rahu and Ketu — extremely high power. Can be highly positive or highly negative. Should never argue or criticize anyone.',rem:'Go to any temple daily and sit for at least 30 mins.'},
+{cat:'Opposite Aspect',type:'p',pres:[3,2],abs:[6],name:'3-2 Opposite Aspect (3 X 2)',desc:'Jupiter gives knowledge. Moon brings mood swings. Philosophical by nature. Helpful nature. Can win over enemies easily. May not have happiness related to children.',rem:'Durga Ma and Laxmi Ma ki pooja.'},
+{cat:'Opposite Aspect',type:'n',pres:[1,8],abs:[7],name:'1-8 Opposite Aspect (1 X 8)',desc:'Anti planets. Difficulties in professional life. Finances will not be stable. Relationship between son and father will not be good.',rem:'Place a triangular bhagwa flag on Hanuman ji\'s left foot every month. Recite Hanuman Chalisa at least 5 times before bed.'},
+{cat:'Opposite Aspect',type:'n',pres:[9,4],abs:[5],name:'9-4 Opposite Aspect (9 X 4)',desc:'High energy, blunt, extremely dominating nature. Will power is strong.',rem:'On Wednesday offer a Ladoo to Ganesh ji and Durvaas. Tulsi ji ki pooja. Ganesh Atharvashirsha.'},
+{cat:'Opposite Aspect',type:'p',pres:[3,9],abs:[1],name:'3-9 Opposite Aspect (3 X 9)',desc:'Jupiter and Mars. Very kindhearted. Humanitarian. Multi-talented, analytical skills are impressive. Highly intelligent, very good advisor.',rem:'Surya Atharvashirsha. Stand in front of Sun and offer Jal.'},
+{cat:'Opposite Aspect',type:'n',pres:[6,5],abs:[7],name:'6-5 Opposite Aspect (6 X 5)',desc:'Luxury lover. Materialistic in nature. Solo traveler — always enjoying life. Family will be neglected.',rem:'Nand Kumar Stotram. Ganesh pooja. Soak sabut moong Tuesday night and feed to birds.'},
+{cat:'Opposite Aspect',type:'n',pres:[2,4],abs:[8],name:'2-4 Opposite Aspect — Grahan Dosh (2 X 4)',desc:'Grahan Dosh. Health issues, mood swing of very high level. Decision making capacity is very less. Family problems always.',rem:'Shiv ji Pooja. Chandrashekhar Ashtam. Read Hanuman Chalisa 5 times before bed.'},
+{cat:'Opposite Aspect',type:'n',pres:[9,2],abs:[7],name:'9-2 Opposite Aspect (9 X 2)',desc:'2 is water and 9 is fire. Health issues, aggressive in nature. Anger issues of exceedingly elevated level.',rem:'Shiv ji ki pooja and Hanuman ji ki pooja.'},
+{cat:'Opposite Aspect',type:'n',pres:[3,4],abs:[7],name:'3-4 Opposite Aspect — Guru Chandaal Dosh (3 X 4)',desc:'Guru Chandaal Dosh. Will not be able to use studies fully. Family does not value you.',rem:'Vishnu Sahasranamam. Kele ki pooja (chane ki dal, gur, haldi, jal).'},
+{cat:'Retro Aspect',type:'p',pres:[3,8],abs:[6,7],name:'3-8 Retro Aspect (3 X X 8)',desc:'Can be a consultant. Spiritual development. Occult science is for them. Professional name and fame are there. Truly clear hearted.',rem:'Guru ki Upasana. Chandan/kesar/haldi tikka. Madhur Ashtakam. Vishnu Sahasranamam.'},
+{cat:'Retro Aspect',type:'n',pres:[8,9],abs:[5,4],name:'8-9 Retro Aspect (9 X 8 X)',desc:'High energy people. Extreme anger. Workaholic. Cannot talk politely. Never get credit for their hard work.',rem:'Hanuman ji, Ganesh and Surya ki Pooja.'},
+{cat:'Retro Aspect',type:'p',pres:[1,2],abs:[6,7],name:'1-2 Retro Aspect — Universal Support (X 1 X 2)',desc:'Fantastic Yog. Universal support. Friendly nature people. Help everyone. They don\'t have much struggle. Great name and fame.',rem:'Shiv ji Panchamrit. Jal Arpit kare. Surya ki Pooja kare.'},
+{cat:'Retro Aspect',type:'n',pres:[1,4],abs:[7,5],name:'1-4 Retro Aspect — Grahan Dosh (1 X X 4)',desc:'Grahan Dosh. Always tension in the family. Career is also unstable. Extremely egoistic. Spendthrifts. Will always have enemies.',rem:'Chant Surya Atharvashirsha. Offer Jal to rising Sun.'},
+{cat:'Retro Aspect',type:'p',pres:[2,5],abs:[6,7],name:'2-5 Retro Aspect (5 2 X X)',desc:'Occult science — can learn easily if they get a good guru. Emotional and sensitive. Dependency is a lot on others.',rem:'Daily read spiritual books. Shiv ji ki pooja.'},
+{cat:'Retro Aspect',type:'p',pres:[3,5],abs:[1,7],name:'3-5 Retro Aspect (3 X X 5)',desc:'Very sharp memory. Reputation is very good. These people have problems with money. Family bonding is less.',rem:'Guru ki Upasana. Banana tree ki pooja. Hanuman Chalisa 5 times. Surya Atharvashirsha.'},
+{cat:'Retro Aspect',type:'p',pres:[6,4],abs:[7,5],name:'6-4 Retro Aspect (6 X X 4)',desc:'Shukr and Rahu. Both love luxuries. Attract money — financial success is easily achievable. Luxury will always be there. Family issues arise.',rem:'Mata Rani or Ma Durga or Ma Laxmi ki pooja karo.'},
+{cat:'Retro Aspect',type:'n',pres:[6,9],abs:[3,1],name:'6-9 Retro Aspect (X X 9 6)',desc:'Shukr is female energy, Mangal is male energy. Marriage delay. Very attractive. Get financial success. Support from opposite gender.',rem:'Bhagwan Ram and Shiv ji ki pooja. Tulsiji ki pooja.'},
+{cat:'Trine Aspect',type:'n',pres:[2,1,4],abs:[3,9,6,7],name:'2-1-4 Trine Aspect (Disturbances in Education)',desc:'People born after year 2000. Cannot take education seriously. Can have health issues easily. Finances are not stable. Family issues occur.',rem:'Madhura Ashtam. Put haldi, Chandan, kesar ka tikka. Chant Hanuman Chalisa 5 times before bed.'},
+{cat:'Trine Aspect',type:'n',pres:[3,8,9],abs:[5,2,4,6],name:'3-8-9 Trine Aspect (Average Education, Success After Hard Work)',desc:'Financial struggle is immense. Smooth life is not there. Continue to work hard and improve skills. Personal life is destroyed or late marriage.',rem:'Pray to Bhagwan Shiv. Chant any Shiv mantra.'},
+{cat:'Trine Aspect',type:'p',pres:[3,2,5],abs:[1,9,8,4],name:'3-2-5 Trine Aspect (Sharp Memory, Foreign Travel, Occult Science)',desc:'Born after year 2000. Very sharp memory. There is foreign travel and financial success. Driven towards occult science.',rem:'The more they do Surya remedy, the more they will find stability.'},
+{cat:'Trine Aspect',type:'n',pres:[6,9,4],abs:[3,1,7,5],name:'6-9-4 Trine Aspect (Strong Will Power, Materialistic Life)',desc:'Strong materialistic desire. Will power is strong. Extra marital affair tendencies are elevated.',rem:'Bhagwan Ram and Shiv ji ki pooja. Tulsiji ki pooja. Maintain moral boundaries.'},
+{cat:'Angular Aspect',type:'n',pres:[1,7,5],abs:[3],name:'1-7-5 Angular Aspect (1 X 7 5)',desc:'Emotional people. Never-ending questions. Can be argumentative. Relationship issues. If they get into addiction, they can never leave it.',rem:'Control arguments. Spiritual practice. Avoid addiction at all costs.'},
+{cat:'Angular Aspect',type:'n',pres:[1,6,7],abs:[3],name:'1-7-6 Angular Aspect (X 1 6 7)',desc:'Can have a lot of difficulties in career. Money management is bad. Extra marital affairs can happen or at least two marriages.',rem:'Bhagwan Ram ki pooja. Maintain loyalty. Financial discipline needed.'},
+{cat:'Angular Aspect',type:'p',pres:[1,9,7],abs:[4],name:'9-1-7 Angular Aspect (1 9 7 X)',desc:'Will have a successful career. With support, can master anything. Overly aggressive, strong will power. Foreign travel and settlement abroad can be easily done.',rem:'Meditate to control aggression. Channel strong will power into positive goals.'},
+{cat:'Angular Aspect',type:'p',pres:[3,1,7],abs:[9],name:'3-1-7 Angular Aspect (3 1 X 7)',desc:'Do well in education field. Get name fame, but relationship issues exist. Should not prioritize money. Should work in charities and humanitarian field.',rem:'Focus on humanitarian work for best karma.'},
+{cat:'Angular Aspect',type:'p',pres:[3,1,6],abs:[2],name:'1-3-6 Angular Aspect (3 1 6 X)',desc:'Highly intelligent. Sharp memory. Teaching skills are particularly good. Luck factor activates after marriage. The more networking they do, the more successful.',rem:'Network aggressively. Get married for luck activation.'},
+{cat:'Angular Aspect',type:'n',pres:[1,9,5],abs:[4],name:'1-9-5 Angular Aspect (1 9 X 5)',desc:'Aggressive and dominating. Highly intelligent. Straightforward. Good motivators. Once they understand they have excellent communication skills, they become successful.',rem:'Control aggression. Use communication positively.'},
+{cat:'Angular Aspect',type:'n',pres:[7,5,4],abs:[6],name:'7-5-4 Angular Aspect (7 5 X 4)',desc:'Immense struggles in their life. Communication is strong but can be argumentative and rude. If they work hard, success will follow.',rem:'Work hard without giving up. Use communication for success not arguments.'},
+{cat:'Angular Aspect',type:'n',pres:[6,7,2],abs:[8],name:'7-6-2 Angular Aspect (6 7 2 X)',desc:'Do not want to come out of comfort zone. Intuition powers are extraordinarily strong. Should NEVER speak ill about others — they have Kaali Zubaan.',rem:'Never speak ill of others. Use intuition powers for career.'},
+{cat:'Angular Aspect',type:'p',pres:[5,8,4],abs:[7],name:'5-4-8 Angular Aspect (X 5 8 4)',desc:'Kindhearted people. Humanitarian. Confused between right and wrong. Career has difficulties. If rude and argumentative, they can destroy relationships.',rem:'Pray to Ram ji. Hanuman Chalisa 5 times before bed.'},
+{cat:'Angular Aspect',type:'n',pres:[6,2,8],abs:[7],name:'6-2-8 Angular Aspect (6 X 2 8)',desc:'Marital life is not good. Late marriage Yog. Highly emotional. Financial success through hard work.',rem:'Accept late marriage and work on self. Focus on financial discipline.'},
+{cat:'Angular Aspect',type:'p',pres:[6,7,8],abs:[5],name:'6-7-8 Angular Aspect (6 7 X 8)',desc:'Memory is very sharp. Can be impressive coaches. Luxury comes after hard work. Can do well in law.',rem:'Control addictions strictly. Coach others — it\'s your calling.'},
+{cat:'Angular Aspect',type:'n',pres:[7,5,8],abs:[4],name:'5-7-8 Angular Aspect (7 5 8 X)',desc:'Think they are powerful. Big time wasters, highly lazy. Family issues. Sibling issues. Ego stays for life.',rem:'Fight laziness every day. Work on ego reduction.'},
+{cat:'Angular Aspect',type:'n',pres:[7,2,8],abs:[3],name:'7-8-2 Angular Aspect (X 7 2 8)',desc:'Will always have some or the other health issues or joint pain. Need proper guidance in every field. Coconut people — hard from outside, soft from inside.',rem:'Seek guidance actively. Take care of health.'},
+{cat:'Angular Aspect',type:'n',pres:[7,8,4],abs:[5],name:'7-8-4 Angular Aspect (7 X 8 4)',desc:'Never-ending struggle. The more they work hard the more success will come. Ego and overconfidence are their enemy.',rem:'Recognize your talent. Control ego and overconfidence.'},
+{cat:'Angular Aspect',type:'p',pres:[3,1,6],abs:[2],name:'3-6-1 Angular Aspect (3 1 6 X)',desc:'Will always gain knowledge. This Yog gives ego. Prefer loneliness. Extreme success in education field. If money minded, life will be full of struggles.',rem:'Stay humble. Do not prioritize money over knowledge.'},
+{cat:'Angular Aspect',type:'n',pres:[9,7,5],abs:[3],name:'9-5-7 Angular Aspect (X 9 7 5)',desc:'Relationship issues to the peak. Very argumentative. Do wrong and then repent. Can be successful but need to channelize energy in routine and discipline.',rem:'Think before acting. Build a daily routine.'}
+];
+
+function getYogs(pSet){return ALL_YOGS.filter(function(y){return y.pres.every(function(n){return pSet[n];})&&y.abs.every(function(n){return!pSet[n];});});}
+function mkMiniGrid(pres,absArr){var presSet={};pres.forEach(function(n){presSet[n]=1;});var absSet={};absArr.forEach(function(n){absSet[n]=1;});var h='<div class="yog-mini">';VG_FLAT.forEach(function(n){if(presSet[n])h+='<div class="ym on">'+n+'</div>';else if(absSet[n])h+='<div class="ym off">'+n+'</div>';else h+='<div class="ym">'+n+'</div>';});return h+'</div>';}
+
+// ── VEDIC ASTRO ENGINE ────────────────────────────────────────────────────────
+function normDeg(d){return((d%360)+360)%360;}
+function julianDay(yr,mo,dy,hr){var Y=yr,M=mo,D=dy+hr/24;if(M<=2){Y--;M+=12;}var A=Math.floor(Y/100);var B=2-A+Math.floor(A/4);return Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+D+B-1524.5;}
+function toRad(d){return d*Math.PI/180;}
+function toDeg(r){return r*180/Math.PI;}
+
+function calcPlanets(yr,mo,dy,bhr,bmn,lat,lng){
+  var jd=julianDay(yr,mo,dy,bhr+bmn/60-lng/15); // convert to UT
+  var T=(jd-2451545.0)/36525.0;
+  // Lahiri Ayanamsa
+  var ayanamsa=23.85+0.01360836*(jd-2451545)/365.25;
+  // Sun
+  var sunL=normDeg(280.46646+36000.76983*T);
+  var sunM=normDeg(357.52911+35999.05029*T);var sunMr=toRad(sunM);
+  var sunEq=1.914602*Math.sin(sunMr)+0.019993*Math.sin(2*sunMr)+0.000289*Math.sin(3*sunMr);
+  var sunSid=normDeg(sunL+sunEq-ayanamsa);
+  // Moon
+  var moonL=normDeg(218.3165+481267.8813*T);
+  var moonM=normDeg(134.9634+477198.8676*T);var moonMr=toRad(moonM);
+  var moonD=normDeg(297.8502+445267.1115*T);var moonDr=toRad(moonD);
+  var moonF=normDeg(93.2721+483202.0175*T);var moonFr=toRad(moonF);
+  var moonEq=6.2886*Math.sin(moonMr)+1.2740*Math.sin(2*moonDr-moonMr)+0.6583*Math.sin(2*moonDr)+0.2136*Math.sin(2*moonMr)-0.1851*Math.sin(toRad(normDeg(357.5291+35999.0503*T)))-0.1143*Math.sin(2*moonFr)+0.0588*Math.sin(2*moonDr-2*moonMr)+0.0572*Math.sin(2*moonDr+moonMr-2*moonFr);
+  var moonSid=normDeg(moonL+moonEq-ayanamsa);
+  // Mercury (simplified orbital)
+  var merL=normDeg(252.2509+149472.6674*T);var merM=normDeg(174.7948+53892.0298*T);var merMr=toRad(merM);
+  var merSid=normDeg(merL+0.3167*Math.sin(merMr)-ayanamsa);
+  // Venus
+  var venL=normDeg(181.9798+58517.8156*T);var venM=normDeg(212.9618+58517.8039*T);var venMr=toRad(venM);
+  var venSid=normDeg(venL+0.7758*Math.sin(venMr)-ayanamsa);
+  // Mars
+  var marL=normDeg(355.4330+19140.2993*T);var marM=normDeg(19.3730+19140.2993*T);var marMr=toRad(marM);
+  var marSid=normDeg(marL+10.6912*Math.sin(marMr)-ayanamsa);
+  // Jupiter
+  var jupL=normDeg(34.3515+3034.9057*T);var jupM=normDeg(20.9202+3034.9057*T);var jupMr=toRad(jupM);
+  var jupSid=normDeg(jupL+5.5549*Math.sin(jupMr)-ayanamsa);
+  // Saturn
+  var satL=normDeg(50.0774+1222.1138*T);var satM=normDeg(317.0207+1222.1138*T);var satMr=toRad(satM);
+  var satSid=normDeg(satL+6.3585*Math.sin(satMr)-ayanamsa);
+  // Rahu (mean lunar node)
+  var rahuSid=normDeg(125.0445-1934.1363*T-ayanamsa);
+  var ketuSid=normDeg(rahuSid+180);
+  // Ascendant using RAMC
+  var RAMC=normDeg(280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T+lng);
+  var e=23.4392911111-(0.013004167+0.0000001639*T)*T;
+  var latRad=toRad(lat);var ramcRad=toRad(RAMC);var eRad=toRad(e);
+  var ascTan=Math.cos(ramcRad)/(-Math.sin(ramcRad)*Math.cos(eRad)-Math.tan(latRad)*Math.sin(eRad));
+  var ascTropic=normDeg(toDeg(Math.atan(ascTan))+(Math.cos(ramcRad)<0?180:0));
+  var ascSid=normDeg(ascTropic-ayanamsa);
+  return{Sun:sunSid,Moon:moonSid,Mercury:merSid,Venus:venSid,Mars:marSid,Jupiter:jupSid,Saturn:satSid,Rahu:rahuSid,Ketu:ketuSid,Ascendant:ascSid};
+}
+
+function getSign(deg){return Math.floor(normDeg(deg)/30);}
+function getDegInSign(deg){return normDeg(deg)%30;}
+function getHouseNum(planetDeg,ascDeg){return((Math.floor(normDeg(planetDeg-ascDeg)/30))+12)%12+1;}
+
+// ── NORTH INDIAN VEDIC CHART (proper diamond/square layout) ─────────────────
+// Standard North Indian chart: 4x4 grid, center 4 cells empty
+// Houses in fixed positions (house NUMBER at fixed cell), signs rotate with lagna
+// Cell layout (row,col): 
+//  (0,0)=H12  (0,1)=H1  (0,2)=H2  (0,3)=H3
+//  (1,0)=H11  center    center    (1,3)=H4
+//  (2,0)=H10  center    center    (2,3)=H5
+//  (3,0)=H9   (3,1)=H8  (3,2)=H7  (3,3)=H6
+// BUT signs in each house depend on Lagna: Lagna sign goes in H1, next sign in H2, etc.
+
+function renderNIChart(planets,ascSign,houseMap){
+  var S=70; // cell size in px
+  var W=S*4,H=S*4;
+  // House layout: fixed house numbers at fixed grid positions
+  var houseGrid=[
+    [12,1,2,3],
+    [11,-1,-1,4],
+    [10,-1,-1,5],
+    [9,8,7,6]
+  ];
+  var html='<svg width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">';
+  // Draw outer border
+  html+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="none" stroke="var(--color-border-secondary)" stroke-width="1"/>';
+  // Draw inner cross lines
+  html+='<line x1="'+S+'" y1="0" x2="'+S+'" y2="'+H+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="'+(2*S)+'" y1="0" x2="'+(2*S)+'" y2="'+H+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="'+(3*S)+'" y1="0" x2="'+(3*S)+'" y2="'+H+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="0" y1="'+S+'" x2="'+W+'" y2="'+S+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="0" y1="'+(2*S)+'" x2="'+W+'" y2="'+(2*S)+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="0" y1="'+(3*S)+'" x2="'+W+'" y2="'+(3*S)+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  // Draw diagonal lines in center cells
+  html+='<line x1="'+S+'" y1="'+S+'" x2="'+(3*S)+'" y2="'+(3*S)+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+  html+='<line x1="'+(3*S)+'" y1="'+S+'" x2="'+S+'" y2="'+(3*S)+'" stroke="var(--color-border-secondary)" stroke-width="0.5"/>';
+
+  // Fill each cell
+  for(var r=0;r<4;r++){
+    for(var c=0;c<4;c++){
+      var houseNum=houseGrid[r][c];
+      if(houseNum<0)continue; // center cell
+      var x=c*S,y=r*S;
+      // Is lagna?
+      var isLagna=(houseNum===1);
+      if(isLagna){html+='<rect x="'+x+'" y="'+y+'" width="'+S+'" height="'+S+'" fill="rgba(83,74,183,0.08)"/>';}
+      // Sign in this house (ascSign = sign in H1, ascSign+1 in H2, etc.)
+      var signIdx=(ascSign+houseNum-1)%12;
+      var signName=SIGNS_HI[signIdx]; // Hindi sign name
+      // House number
+      html+='<text x="'+(x+3)+'" y="'+(y+11)+'" font-size="8" fill="var(--color-text-secondary)" font-weight="600">'+houseNum+'</text>';
+      // Sign name
+      html+='<text x="'+(x+S/2)+'" y="'+(y+22)+'" font-size="8" fill="#534AB7" text-anchor="middle">'+signName+'</text>';
+      // Planets in this house
+      var planetsInHouse=houseMap[houseNum]||[];
+      var py2=y+36;
+      planetsInHouse.forEach(function(p,pi){
+        var col=PLANET_COLOR[p]||'#333';
+        var abbr=PLANET_ABB[p]||p.substring(0,2);
+        // Add degree info
+        var deg=planets[p];var degInSign=getDegInSign(deg).toFixed(0);
+        html+='<text x="'+(x+S/2)+'" y="'+(py2+pi*12)+'" font-size="9" fill="'+col+'" text-anchor="middle" font-weight="700">'+abbr+' '+degInSign+'°</text>';
+      });
+    }
+  }
+  // Center: chart title
+  html+='<text x="'+W/2+'" y="'+(H/2-6)+'" font-size="10" fill="var(--color-text-secondary)" text-anchor="middle">Vedic</text>';
+  html+='<text x="'+W/2+'" y="'+(H/2+8)+'" font-size="10" fill="var(--color-text-secondary)" text-anchor="middle">Birth Chart</text>';
+  html+='</svg>';
+  return html;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function ds(n){var s=0;String(Math.abs(parseInt(n)||0)).split('').forEach(function(d){s+=parseInt(d)||0});if(s>9)return ds(s);return s}
+function setMode(m){mode=m;document.getElementById('tm1').className='tog'+(m===1?' on':'');document.getElementById('tm2').className='tog'+(m===2?' on':'');}
+document.getElementById('dob').addEventListener('change',function(){var p=this.value.split('-');if(p.length===3){var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));document.getElementById('dow').value=DAYS[d.getDay()];}});
+setTimeout(function(){document.getElementById('dob').dispatchEvent(new Event('change'))},50);
+function getLH(hr,mn,wday){var row=Math.floor(hr)%12;var col=wday*2+(hr<12?0:1);return LHORA[row][col];}
+function getMDseq(dr){var seq=[];for(var i=0;i<9;i++){var p=((dr-1+i)%9)+1;seq.push({p:p,y:MDY[i]});}return seq;}
+function getActiveMD(dr,birthYr,curYr){var seq=getMDseq(dr);var y=birthYr;var c=0;while(c<10){for(var i=0;i<seq.length;i++){var s=seq[i];if(curYr>=y&&curYr<y+s.y)return{p:s.p,y:s.y,sy:y,ey:y+s.y};y+=s.y;}c++;}return null;}
+function getADs(md){var seq=getMDseq(md.p);var ads=[];var cur=md.sy;for(var i=0;i<seq.length;i++){var s=seq[i];var m=(md.y*s.y)/45*12;ads.push({p:s.p,months:m,sy:cur,ey:cur+m/12});cur+=m/12;}return ads;}
+function prel(p1,p2){if((FRND[p1]||[]).indexOf(p2)>=0)return'f';if((NFRND[p1]||[]).indexOf(p2)>=0)return'uf';return'n';}
+function rl(r){return r==='f'?'Friendly':r==='uf'?'Non-friendly':'Neutral'}
+function rc(r){return r==='f'?'tf':r==='uf'?'tu':'tn'}
+function getMoonData(mo,dy,yr){var a=Math.floor((14-mo)/12);var y=yr+4800-a;var m=mo+12*a-3;var jd=dy+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;var T=(jd-2451545.0)/36525.0;var ml=((218.3165+481267.8813*T)%360+360)%360;var nIdx=Math.min(Math.floor(ml/13.3333),26);return{nak:NK[nIdx],lord:NK_LORD[nIdx],lon:ml,nIdx:nIdx};}
+function getVim(nIdx,birthYr){var li=VIM_O.indexOf(NK_LORD[nIdx]);var seq=[];var y=birthYr;for(var i=0;i<9;i++){var pl=VIM_O[(li+i)%9];var yrs=VIM_Y[pl];seq.push({pl:pl,yrs:yrs,start:y,end:y+yrs});y+=yrs;}return seq;}
+function getSS(mo,dy){var SS=[{n:'Aries',sm:3,sd:21,em:4,ed:19,lord:9,ex:1,db:8,el:'Fire'},{n:'Taurus',sm:4,sd:20,em:5,ed:20,lord:6,ex:2,db:0,el:'Earth'},{n:'Gemini',sm:5,sd:21,em:6,ed:20,lord:5,ex:0,db:0,el:'Air'},{n:'Cancer',sm:6,sd:21,em:7,ed:22,lord:2,ex:3,db:0,el:'Water'},{n:'Leo',sm:7,sd:23,em:8,ed:22,lord:1,ex:0,db:0,el:'Fire'},{n:'Virgo',sm:8,sd:23,em:9,ed:22,lord:5,ex:5,db:0,el:'Earth'},{n:'Libra',sm:9,sd:23,em:10,ed:22,lord:6,ex:8,db:1,el:'Air'},{n:'Scorpio',sm:10,sd:23,em:11,ed:21,lord:9,ex:0,db:2,el:'Water'},{n:'Sagittarius',sm:11,sd:22,em:12,ed:21,lord:3,ex:0,db:0,el:'Fire'},{n:'Capricorn',sm:12,sd:22,em:1,ed:19,lord:8,ex:9,db:3,el:'Earth'},{n:'Aquarius',sm:1,sd:20,em:2,ed:18,lord:8,ex:0,db:0,el:'Air'},{n:'Pisces',sm:2,sd:19,em:3,ed:20,lord:3,ex:6,db:5,el:'Water'}];for(var i=0;i<SS.length;i++){var s=SS[i];if(s.n==='Capricorn'){if((mo===12&&dy>=22)||(mo===1&&dy<=19))return s;}else if(s.n==='Aquarius'){if((mo===1&&dy>=20)||(mo===2&&dy<=18))return s;}else if(s.n==='Pisces'){if((mo===2&&dy>=19)||(mo===3&&dy<=20))return s;}else{if((mo===s.sm&&dy>=s.sd)||(mo===s.em&&dy<=s.ed))return s;}}return SS[0];}
+function st(i){document.querySelectorAll('.tab').forEach(function(t,j){t.className='tab'+(i===j?' on':'')});document.querySelectorAll('.tc').forEach(function(t,j){t.className='tc'+(i===j?' on':'')});}
+function toggle(id){var el=document.getElementById(id);el.className=el.className==='num-deep-body'?'num-deep-body open':'num-deep-body';}
+
+// ── PREDICTIONS ENGINE ────────────────────────────────────────────────────────
+function genPredictions(planets,ascSign,houseMap){
+  var preds={personality:[],career:[],health:[],relationships:[],wealth:[],spirituality:[]};
+  var SIGN_TRAITS=['courageous, pioneering and energetic','patient, sensual and determined','versatile, communicative and adaptable','nurturing, emotional and intuitive','confident, creative and regal','analytical, practical and service-oriented','balanced, diplomatic and harmony-seeking','intense, transformative and perceptive','philosophical, adventurous and truth-seeking','ambitious, disciplined and goal-oriented','humanitarian, innovative and independent','compassionate, spiritual and empathetic'];
+  var SIGN_BODY=['head, brain and eyes','neck, throat and face','shoulders, arms and lungs','chest, stomach and breasts','heart, back and spine','digestive system and intestines','kidneys, lower back and skin','reproductive organs and bladder','hips, thighs and liver','knees, bones and joints','calves, ankles and nervous system','feet, lymphatic system and immune system'];
+  var EXALT={Sun:0,Moon:1,Mercury:5,Venus:11,Mars:9,Jupiter:3,Saturn:6};
+  var DEBI={Sun:6,Moon:7,Mercury:11,Venus:5,Mars:3,Jupiter:9,Saturn:0};
+  function planStatus(p){var s=getSign(planets[p]);if(EXALT[p]===s)return'exalted (very strong)';if(DEBI[p]===s)return'debilitated (weakened)';return'in '+SIGNS[s];}
+
+  // Personality
+  preds.personality.push('Lagna (Ascendant) is in '+SIGNS[ascSign]+' — you are naturally '+SIGN_TRAITS[ascSign]+'. The rising sign shapes your outer personality, physical appearance and how others perceive you.');
+  preds.personality.push('Sun is '+planStatus('Sun')+' — your soul purpose, vitality and authority are expressed through '+SIGNS[getSign(planets.Sun)]+' qualities of '+SIGN_TRAITS[getSign(planets.Sun)]+'.');
+  preds.personality.push('Moon is '+planStatus('Moon')+' — your emotional nature, mind and instincts operate through '+SIGNS[getSign(planets.Moon)]+', making you emotionally '+SIGN_TRAITS[getSign(planets.Moon)]+'.');
+  if(houseMap[1]&&houseMap[1].length>0)preds.personality.push('Planets in the 1st house ('+houseMap[1].join(', ')+') strongly colour your personality and physical constitution. These planetary energies are expressed directly through your being.');
+
+  // Career (10th house)
+  var h10=houseMap[10]||[];
+  if(h10.length>0)preds.career.push('Planets in 10th house ('+h10.join(', ')+') — powerful career indicator. These planets shape your professional destiny, public status and ambitions directly.');
+  preds.career.push('10th house lord is '+SIGN_LORD[(ascSign+9)%12]+' in '+SIGNS[getSign(planets[SIGN_LORD[(ascSign+9)%12]])]+'. This is the key planet governing your career trajectory, leadership qualities and recognition in society.');
+  preds.career.push('Saturn is '+planStatus('Saturn')+'. Saturn rules career karma — your professional success is built through discipline, persistence and consistent effort. Saturn rewards those who work without shortcuts.');
+  preds.career.push('Jupiter is '+planStatus('Jupiter')+'. Jupiter brings expansion, wisdom and opportunities in your career and financial matters. It indicates the areas where luck and growth flow naturally.');
+
+  // Health
+  preds.health.push('Lagna in '+SIGNS[ascSign]+' — the body constitution is influenced by this sign, which rules the '+SIGN_BODY[ascSign]+'. Health tendencies related to these areas should be monitored carefully.');
+  var h6=houseMap[6]||[];
+  if(h6.length>0)preds.health.push('Planets in the 6th house ('+h6.join(', ')+') indicate specific health areas requiring attention. The 6th house governs illness, enemies, debts and service. These planets create health challenges that can be overcome through discipline.');
+  preds.health.push('Mars is '+planStatus('Mars')+'. Mars governs physical vitality, immunity and energy levels. Regular physical exercise and outdoor activities strengthen Mars and build resistance to illness.');
+  preds.health.push('Sun represents vitality and heart health. Being in '+SIGNS[getSign(planets.Sun)]+', take special care of '+SIGN_BODY[getSign(planets.Sun)]+'. Proper sleep, exposure to morning sunlight and avoiding excessive salt support Sun energy.');
+
+  // Relationships
+  var h7=houseMap[7]||[];
+  preds.relationships.push('7th house lord is '+SIGN_LORD[(ascSign+6)%12]+' in '+SIGNS[getSign(planets[SIGN_LORD[(ascSign+6)%12]])]+'. This planet governs the nature of your marriage, business partnerships and significant relationships.');
+  if(h7.length>0)preds.relationships.push('Planets in 7th house ('+h7.join(', ')+') directly shape your marriage and partnerships. These planets describe the nature of your life partner and the quality of your most significant bonds.');
+  preds.relationships.push('Venus is '+planStatus('Venus')+'. Venus governs love, beauty, harmony and marital happiness. Its sign and house placement reveal your romantic style, what you seek in a partner, and the overall quality of your love life.');
+  preds.relationships.push('Moon in '+SIGNS[getSign(planets.Moon)]+' reveals your emotional needs in relationships. You instinctively seek partners who fulfill your need to feel '+(['courageous','secure','communicative','emotionally understood','admired','perfect','harmonious','deeply bonded','philosophically aligned','materially secure','intellectually free','spiritually connected'][getSign(planets.Moon)]||'safe')+'.');
+
+  // Wealth
+  var h2=houseMap[2]||[];var h11=houseMap[11]||[];
+  preds.wealth.push('2nd house lord '+SIGN_LORD[(ascSign+1)%12]+' in '+SIGNS[getSign(planets[SIGN_LORD[(ascSign+1)%12]])]+' governs accumulated wealth, family finances, speech and self-worth. Its placement determines financial resources and earning capacity.');
+  if(h11.length>0)preds.wealth.push('Planets in the 11th house ('+h11.join(', ')+') — the house of gains, income and fulfillment of desires. Multiple planets here indicate multiple income streams and active social network driving financial growth.');
+  preds.wealth.push('Jupiter in '+SIGNS[getSign(planets.Jupiter)]+' expands wealth and fortune. Being the natural significator of abundance, Jupiter\'s placement shows where prosperity flows most naturally in your life.');
+
+  // Spirituality
+  var ketuSign=getSign(planets.Ketu);var rahuSign=getSign(planets.Rahu);
+  preds.spirituality.push('Ketu in '+SIGNS[ketuSign]+' ('+SIGNS_HI[ketuSign]+') — your accumulated spiritual karma from past lives. You have mastered '+SIGN_TRAITS[ketuSign]+' qualities and carry this wisdom. This gives you natural detachment from '+SIGNS[ketuSign]+' matters.');
+  preds.spirituality.push('Rahu in '+SIGNS[rahuSign]+' ('+SIGNS_HI[rahuSign]+') — your soul\'s goal this lifetime is to master and embrace '+SIGN_TRAITS[rahuSign]+' qualities. This is where you experience the most intense desires, ambitions and growth. Embracing Rahu\'s path brings your greatest worldly achievements.');
+  var h12=houseMap[12]||[];
+  if(h12.length>0)preds.spirituality.push('Planets in 12th house ('+h12.join(', ')+') indicate strong spiritual leanings, connection to foreign lands, meditation and liberation (moksha). This placement supports spiritual practices, retreat and inner growth.');
+  preds.spirituality.push('The 9th house (dharma, fortune and past-life merit) has '+SIGN_LORD[(ascSign+8)%12]+' as its lord in '+SIGNS[getSign(planets[SIGN_LORD[(ascSign+8)%12]])]+'. This reveals the depth of your spiritual inclinations, your relationship with your Guru, and the quality of your fortune and blessings from past-life good deeds.');
+  return preds;
+}
+
+// ── CALC ─────────────────────────────────────────────────────────────────────
+function calc(){
+  var dob=document.getElementById('dob').value;if(!dob){alert('Please enter a date of birth');return}
+  var parts=dob.split('-');var yr=parseInt(parts[0]),mo=parseInt(parts[1]),dy=parseInt(parts[2]);
+  var bhr=parseInt(document.getElementById('bhr').value)||0;var bmn=parseInt(document.getElementById('bmin').value)||0;
+  var curYr=parseInt(document.getElementById('cyr').value)||2026;
+  var pob=document.getElementById('pob_city').value||'Not specified';
+  var pobLat=parseFloat(document.getElementById('pob_lat').value)||20.0;
+  var pobLng=parseFloat(document.getElementById('pob_lng').value)||78.0;
+  var wday=new Date(yr,mo-1,dy).getDay();
+  var dr=ds(dy),co=ds(dy+mo+yr),st2=ds(dy+mo),py=ds(dy+mo+curYr);
+  var gochar=((dr-1+(curYr-yr)%9)%9)+1;
+  var lx=getLH(bhr,bmn,wday);
+  var NAVM_COL={1:0,4:0,2:1,7:1,9:2,5:3,3:4,6:5,8:6};
+  var NAVM=[[1,7,9,5,3,6,8],[6,8,4,7,9,5,3],[5,3,6,8,1,7,9],[7,9,5,3,6,8,4],[8,1,7,9,5,3,6],[3,6,8,4,2,9,5],[9,5,3,6,8,1,7],[4,2,9,5,3,6,8],[6,8,1,2,9,5,3]];
+  var nav=NAVM[Math.min(Math.floor(((bhr*60+bmn)%60)/6.6667),8)][NAVM_COL[lx]||0];
+  var dobStr=String(dy)+String(mo)+String(yr);
+  var dobD=[];for(var i=0;i<dobStr.length;i++){var c=parseInt(dobStr[i]);if(c>0)dobD.push(c);}
+  var pSetDob={};dobD.forEach(function(n){pSetDob[n]=1;});
+  var pSetYog={};dobD.forEach(function(n){pSetYog[n]=1;});pSetYog[dr]=1;pSetYog[co]=1;
+  var miss=[];for(var n=1;n<=9;n++){if(!pSetDob[n])miss.push(n);}
+  var cnt={};dobD.forEach(function(n){cnt[n]=(cnt[n]||0)+1;});
+  var combKey=String(dr)+String(co);
+  var combDesc=COMB[combKey]||COMB[String(co)+String(dr)]||'A unique blend of '+PL[dr]+' and '+PL[co]+' energies.';
+  var YYm={1:{yin:0,yang:2},2:{yin:2,yang:0},3:{yin:0,yang:0},4:{yin:1,yang:0},5:{yin:0,yang:0},6:{yin:0,yang:0},7:{yin:0,yang:2},8:{yin:1,yang:0},9:{yin:0,yang:2}};
+  var ty=0,tn=0;dobD.forEach(function(d){if(d>0&&YYm[d]){ty+=YYm[d].yin;tn+=YYm[d].yang;}});
+  var yy=tn>ty?'Yang (Male energy dominant)':ty>tn?'Yin (Female energy dominant)':'Balanced (Shiv-Shakti)';
+  var firedYogs=getYogs(pSetYog);
+  var activeMD=getActiveMD(dr,yr,curYr);var ads=activeMD?getADs(activeMD):[];
+  var moonData=getMoonData(mo,dy,yr);var vimSeq=getVim(moonData.nIdx,yr);
+  var activeVim=null;vimSeq.forEach(function(v){if(curYr>=v.start&&curYr<v.end)activeVim=v;});
+  var sunSign=getSS(mo,dy);
+  // Vedic birth chart
+  var planets=calcPlanets(yr,mo,dy,bhr,bmn,pobLat,pobLng);
+  var ascSign=getSign(planets.Ascendant);
+  var houseMap={};for(var h=1;h<=12;h++)houseMap[h]=[];
+  var PLANET_LIST=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+  PLANET_LIST.forEach(function(p){var h=getHouseNum(planets[p],planets.Ascendant);houseMap[h].push(p);});
+  var predictions=genPredictions(planets,ascSign,houseMap);
+
+  var TABS=['Core & Grid','Date Analysis','Yearly','Grid Analysis','Mahadasha','Sun & Moon','Vimshottari','Birth Chart','Remedies'];
+  var tabbar=document.getElementById('tabbar');var tabcontents=document.getElementById('tabcontents');
+  tabbar.innerHTML='';tabcontents.innerHTML='';
+  TABS.forEach(function(t,i){tabbar.innerHTML+='<div class="tab'+(i===0?' on':'')+'" onclick="st('+i+')" style="flex-shrink:0">'+t+'</div>';tabcontents.innerHTML+='<div id="tc'+i+'" class="tc'+(i===0?' on':'')+'"></div>';});
+
+  function buildGrid(){var g='<div class="vgrid">';VG.forEach(function(row){row.forEach(function(n){var inDob=pSetDob[n],isD=n===dr,isC=n===co,isBoth=isD&&isC;var cls='vc';if(isBoth)cls+=' bo';else if(isD)cls+=' dr';else if(isC)cls+=' co';else if(!inDob)cls+=' mi';var badge=isBoth?'<span class="dcb">D+C</span>':'';var c=cnt[n]||0;var rep=c>1?'<div class="vcnt">'+Array(c+1).join(String(n))+'</div>':'';g+='<div class="'+cls+'">'+badge+n+rep+'</div>';});});return g+'</div>';}
+  var gridHTML=buildGrid();
+  var gridLegend='<div style="font-size:11px;color:var(--color-text-secondary);line-height:2.3"><div><span style="display:inline-block;width:10px;height:10px;background:#EEEDFE;border:1.5px solid #534AB7;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Driver ('+dr+')</div><div><span style="display:inline-block;width:10px;height:10px;background:#EAF3DE;border:1.5px solid #2E7D32;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Conductor ('+co+')</div><div><span style="display:inline-block;width:10px;height:10px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:2px;opacity:.3;margin-right:5px;vertical-align:middle"></span>Missing</div>'+(miss.length?'<div>Missing: <strong>'+miss.join(', ')+'</strong></div>':'<div style="color:#1B5E20">All present ✓</div>')+'<div>Yin/Yang: <strong style="color:#534AB7">'+yy+'</strong></div></div>';
+
+  // TAB 0
+  document.getElementById('tc0').innerHTML=
+  '<div class="card"><div class="ng"><div class="nc"><div class="l">Driver (Psychic)</div><div class="v">'+dr+'</div><div class="s">'+PL[dr]+'</div></div><div class="nc"><div class="l">Conductor (Life Path)</div><div class="v" style="color:#2E7D32">'+co+'</div><div class="s">'+PL[co]+'</div></div><div class="nc"><div class="l">Strength #</div><div class="v">'+st2+'</div><div class="s">'+PL[st2]+'</div></div><div class="nc"><div class="l">Personal Year '+curYr+'</div><div class="v">'+py+'</div><div class="s">'+PL[py]+'</div></div><div class="nc"><div class="l">Gochar Year</div><div class="v">'+gochar+'</div><div class="s">'+PL[gochar]+'</div></div><div class="nc"><div class="l">Laxmi Ank</div><div class="v">'+lx+'</div><div class="s">'+PL[lx]+'</div></div>'+(mode===2?'<div class="nc"><div class="l">Navamsha D9</div><div class="v">'+nav+'</div><div class="s">'+PL[nav]+'</div></div>':'')+'<div class="nc"><div class="l">Place of Birth</div><div class="v" style="font-size:12px">'+pob+'</div><div class="s">'+pobLat.toFixed(3)+'°, '+pobLng.toFixed(3)+'°</div></div></div></div>'+
+  '<div class="card"><h2>Vedic Grid</h2><div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:flex-start">'+gridHTML+gridLegend+'</div></div>'+
+  '<div class="card"><h2>Driver '+dr+' × Conductor '+co+' — 81 Combination</h2><div class="db">'+combDesc+'</div></div>'+
+  '<div class="card"><h2>Driver '+dr+' — '+PL[dr]+' Characteristics</h2><div class="db">'+NI[dr].desc+'</div><div class="lg2" style="margin-top:.5rem"><div class="li"><div class="k">Gemstone</div><div class="v">'+NI[dr].gem+'</div></div><div class="li"><div class="k">Lucky Day</div><div class="v">'+NI[dr].day+'</div></div><div class="li"><div class="k">Colors</div><div class="v">'+NI[dr].color+'</div></div><div class="li"><div class="k">Unlucky Colors</div><div class="v">'+NI[dr].un+'</div></div><div class="li"><div class="k">Metal</div><div class="v">'+NI[dr].metal+'</div></div><div class="li"><div class="k">Lucky #s</div><div class="v">'+NI[dr].lucky+'</div></div></div></div>'+
+  '<div class="card"><h2>Best Professions — Driver '+dr+'</h2><div class="db">'+NI[dr].prof+'</div></div>';
+
+  // TAB 1: Date Analysis
+  var daG={1:{'1':'Single 1: Sun energy. Good communication, sharp mind, admin power.','10':'Sun-Mercury. Sharp mind, etched memory. Name fame come very easily.','19':'Creator of their own destiny. Immense power and immense anger. Carry an aura, command respect.','28':'Vish Yog — King but struggling internally. Highly dominating. Name fame then sudden downfall.'},2:{'2':'Single 2: Chandrma energy. Intuitive, emotional, needs pampering.','11':'Master number. Confused thoughts. Want big things but don\'t know how. With a mentor, nothing they cannot achieve.','20':'Chandrma and Mercury. Extremely polite. Family matters a lot. Mood swings.','29':'Chandrma and Mangal. Health issues continuously. Should be active in sports, exercise.'},3:{'3':'Single 3: Jupiter pure energy. Knowledge accumulator. Healer and teacher.','12':'Bahut accha Yog! Surya and Chandrma together. Lot of name fame. Universal support.','21':'Chandrma is ruling. Universal support but with moon\'s mood swings. Will need support all the time.','30':'Jupiter sitting with Mercury. Name fame and prosperity. Should not be lazy.'},4:{'4':'Single 4: Rahu pure energy. Most powerful.','13':'Surya and Jupiter making Rahu. Very strong personality, controversy from young age, sixth sense.','22':'Master number. 2 moons + Rahu power. Attraction ke devta. Highly diplomatic. Can rule anyone.','31':'Jupiter ruling — soft hearted. Can become Daanveer Karan. If they help and you stay away — highly revengeful.'},5:{'5':'Single 5: Mercury pure energy. Balance number.','14':'Surya and Rahu — Grahan. Communication extremely strong. Most self-centered. Life never stable.','23':'Chandrma, Jupiter cannot control Mercury. Mercury lives in its own world. Aimless till around 30s.'},6:{'6':'Single 6: Venus/Shukr energy. Luxury, comfort, and love.','15':'King sitting with child becomes Shukr. Name fame prosperity but no patience.','24':'Chandrma and Rahu = grahan dosh. But Shukr is the only one who can control Rahu as its guru. Never stable.'},7:{'7':'Single 7: Ketu energy. Spiritual, pure, needs support.','16':'Ketu always has problems in at least 1 of 4 aspects. A lot of pretense. Multiple relationships.','25':'Very good combination. Chandrma and Mercury make Ketu. Want to enjoy life to the fullest.'},8:{'8':'Single 8: Shani energy. Slow, things don\'t get done quickly. Must sweat.','17':'Surya ruling, Ketu supporting making Shani. Very high level of struggles from childhood.','26':'Chandrma and Shukr together. Attractive aura and good communication but can say something rude.'},9:{'9':'Single 9: Mangal (Mars) energy. High energy, intelligent, humanitarian.','18':'Surya and Shani — enemies — making a 9. Cannot maintain good relationships for long. Extreme anger.','27':'Chandrma and Ketu making Mangal. Very contradictory. High level of confusion. Health issues.'}};
+  var daKey=String(dy);var daGroup=daG[ds(dy)]||{};var daDesc=daGroup[daKey]||daGroup[String(ds(dy))]||'Date '+dy+' reduces to '+ds(dy)+'. '+PL[ds(dy)]+' energy rules this birth date.';
+  var repH='';Object.keys(cnt).forEach(function(n){if(cnt[n]>=2){var nd=parseInt(n);repH+='<div class="ri"><strong>'+Array(cnt[n]+1).join(String(n))+' ('+PL[nd]+' × '+cnt[n]+'):</strong> '+PLN[nd]+' energy appears '+cnt[n]+' times — significantly amplified.</div>';}});
+  var altMap={1:'If Surya missing — need Mercury (5) AND Venus (6) to give 60-70% of Sun energy.',2:'If Chandrma missing — need Surya (1) AND Jupiter (3) to give Chandrma energy.',3:'If Jupiter missing — need Surya (1) AND Venus (6).',4:'If Rahu missing — need Surya (1) AND Shani (8) to give Rahu energy.',5:'Mercury has no substitute. If Jupiter (3) and Rahu (4) are present — Guru Chandaal Yog works a little.',6:'If Venus missing — need Rahu (4) AND Ketu (7) to give 70% Venus energy.',7:'If Ketu missing — need Venus (6) AND Shani (8) to give some Ketu energy.',8:'If Shani missing — need Jupiter (3) AND Venus (6) — helps to an extent.',9:'If Mars missing — need Surya (1) AND Mercury (5) to give some Mars energy.'};
+  var missH=miss.length?miss.map(function(n){return'<div class="ri"><strong>Missing '+n+' ('+PL[n]+'):</strong> '+MISS[n]+'</div>';}).join(''):'<div class="db" style="color:#1B5E20">All numbers present — grid is complete. A rare and auspicious sign.</div>';
+  var drFrH=(FRND[dr]||[]).map(function(n){return'<span class="rel-tag rel-f">'+PLN[n]+'('+n+')</span>';}).join('');
+  var drNfH=(NFRND[dr]||[]).map(function(n){return'<span class="rel-tag rel-uf">'+PLN[n]+'('+n+')</span>';}).join('');
+  var drNH=[1,2,3,4,5,6,7,8,9].filter(function(n){return(FRND[dr]||[]).indexOf(n)<0&&(NFRND[dr]||[]).indexOf(n)<0&&n!==dr;}).map(function(n){return'<span class="rel-tag rel-n">'+PLN[n]+'('+n+')</span>';}).join('');
+  var coFrH=(FRND[co]||[]).map(function(n){return'<span class="rel-tag rel-f">'+PLN[n]+'('+n+')</span>';}).join('');
+  var coNfH=(NFRND[co]||[]).map(function(n){return'<span class="rel-tag rel-uf">'+PLN[n]+'('+n+')</span>';}).join('');
+  var coNH=[1,2,3,4,5,6,7,8,9].filter(function(n){return(FRND[co]||[]).indexOf(n)<0&&(NFRND[co]||[]).indexOf(n)<0&&n!==co;}).map(function(n){return'<span class="rel-tag rel-n">'+PLN[n]+'('+n+')</span>';}).join('');
+  var doneNums={};var deepH='';var presentNums=Object.keys(pSetDob).map(Number);
+  [dr,co,st2].concat(presentNums).forEach(function(n){if(n>0&&!doneNums[n]&&NI[n]){doneNums[n]=1;deepH+='<div class="num-deep"><div class="num-deep-hdr" onclick="toggle(\'nd'+n+'\')"><span><strong>'+n+' — '+PL[n]+'</strong></span><span style="font-size:10px;color:#534AB7">▼ tap to expand</span></div><div class="num-deep-body" id="nd'+n+'"><div style="margin-bottom:.5rem"><strong>Core Character:</strong><br>'+NI[n].desc+'</div><div style="margin-bottom:.5rem"><strong>Deep Analysis:</strong><br>'+NI[n].deep+'</div><div style="margin-bottom:.5rem"><strong>Profession:</strong><br>'+NI[n].prof+'</div><div style="margin-bottom:.5rem"><strong>Remedy:</strong><br>'+NI[n].rem+'</div><div><strong>Health Watch:</strong><br>'+NI[n].health+'</div></div></div>';}});
+  document.getElementById('tc1').innerHTML=
+  '<div class="card"><h2>Date Analysis — Born on '+dy+'</h2><div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:.6rem;border-left:2px solid #9C27B0;font-size:12px;line-height:1.65;color:var(--color-text-secondary)">'+daDesc+'</div></div>'+
+  '<div class="card"><h2>Relationship of Numbers</h2><div style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.35rem">Driver '+dr+' ('+PL[dr]+')</div><div style="margin-bottom:.6rem"><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Friends</div><div style="margin-bottom:.3rem">'+drFrH+'</div><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Non-friends</div><div style="margin-bottom:.3rem">'+(drNfH||'<span class="rel-tag rel-n">None</span>')+'</div><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Neutral</div><div>'+drNH+'</div></div><div style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.35rem;margin-top:.5rem">Conductor '+co+' ('+PL[co]+')</div><div><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Friends</div><div style="margin-bottom:.3rem">'+coFrH+'</div><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Non-friends</div><div style="margin-bottom:.3rem">'+(coNfH||'<span class="rel-tag rel-n">None</span>')+'</div><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:3px">Neutral</div><div>'+coNH+'</div></div></div>'+
+  '<div class="card"><h2>Strength Number '+st2+' — '+PL[st2]+'</h2><div class="db">'+STR[st2]+'</div></div>'+
+  (repH?'<div class="card"><h2>Repetitive Numbers Analysis</h2>'+repH+'</div>':'')+
+  (miss.length?'<div class="card"><h2>Missing Numbers — Remedies</h2>'+missH+'</div>':'')+
+  (miss.length?'<div class="card"><h2>Substitute / Alternate Numbers</h2><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:.4rem">Both substitute numbers must be present in the grid for this to work (gives 60-70% energy).</div>'+miss.map(function(n){return'<div class="ri"><strong>Alternate for '+n+':</strong> '+altMap[n]+'</div>';}).join('')+'</div>':'')+
+  '<div class="card"><h2>Deep Analysis of Your Numbers</h2><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:.6rem">Tap each number to expand full reading.</div>'+deepH+'</div>';
+
+  // TAB 2
+  var pyCombo=COMB[String(dr)+String(py)]||COMB[String(py)+String(dr)]||'Driver '+PL[dr]+' meets Personal Year '+PL[py]+' energy.';
+  var goCombo=COMB[String(co)+String(gochar)]||COMB[String(gochar)+String(co)]||'Conductor '+PL[co]+' meets Gochar Year '+PL[gochar]+' energy.';
+  var lxMarriage={1:'Personal years 1,4,5,7,9 are best for marriage.',2:'Personal years 1,2,5,6,8 are best for marriage.',3:'Personal years 3,6,7,9 are best for marriage.',4:'Personal years 1,2,4,7,8 are best for marriage.',5:'Personal years 2,3,5,7,9 are best for marriage.',6:'Personal years 1,2,3,5,6,9 are best for marriage.',7:'Personal years 1,2,4,8 are best for marriage.',8:'Personal years 1,2,4,6,8 are best for marriage.',9:'Personal years 1,2,3,6,7 are best for marriage.'};
+  document.getElementById('tc2').innerHTML=
+  '<div class="card"><h2>Personal Year '+curYr+': Year '+py+' ('+PL[py]+')</h2><div class="db">'+PY[py]+'</div><div style="font-size:11px;color:var(--color-text-secondary);margin:.5rem 0 .3rem;font-weight:500">Driver '+dr+' × Personal Year '+py+' combination</div><div class="db">'+pyCombo+'</div></div>'+
+  '<div class="card"><h2>Gochar Year: '+gochar+' ('+PL[gochar]+')</h2><div class="db">'+GOCHAR[gochar]+'</div><div style="font-size:11px;color:var(--color-text-secondary);margin:.5rem 0 .3rem;font-weight:500">Conductor '+co+' × Universal Year '+gochar+' combination</div><div class="db">'+goCombo+'</div></div>'+
+  '<div class="card"><h2>Laxmi Ank '+lx+' — '+PL[lx]+'</h2><div class="db">'+LAXMI[lx]+'</div></div>'+
+  '<div class="card"><h2>Active Mahadasha</h2><div class="db">'+(activeMD?'Currently in '+PL[activeMD.p]+' Mahadasha ('+activeMD.sy+' to '+activeMD.ey+'). See Mahadasha tab for detailed breakdown.':'No active Mahadasha detected.')+'</div></div>'+
+  '<div class="card"><h2>Best Years for Marriage — Driver '+dr+'</h2><div class="db">'+(lxMarriage[dr]||'Consult personal year calendar.')+'</div></div>';
+
+  // TAB 3: Grid Analysis
+  var cats=['Main Yog','Conjunction','Opposite Aspect','Retro Aspect','Trine Aspect','Angular Aspect'];
+  var catColors={'Main Yog':'#534AB7','Conjunction':'#2E7D32','Opposite Aspect':'#B71C1C','Retro Aspect':'#E65100','Trine Aspect':'#0D47A1','Angular Aspect':'#6A1B9A'};
+  var catBg={'Main Yog':'#EEEDFE','Conjunction':'#EAF3DE','Opposite Aspect':'#FFEBEE','Retro Aspect':'#FFF3E0','Trine Aspect':'#E3F2FD','Angular Aspect':'#F3E5F5'};
+  var yogSections='';
+  cats.forEach(function(cat){var cy=firedYogs.filter(function(y){return y.cat===cat;});if(!cy.length)return;
+    yogSections+='<div style="margin-bottom:.75rem"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:'+catColors[cat]+';margin-bottom:.4rem;padding:2px 8px;background:'+catBg[cat]+';border-radius:4px;display:inline-block">'+cat+' ('+cy.length+')</div>';
+    cy.forEach(function(y){yogSections+='<div class="yog-row '+(y.type==='p'?'pos':y.type==='n'?'neg':'')+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'+mkMiniGrid(y.pres,y.abs)+'<span class="yt '+(y.type==='p'?'yp':'yn')+'" style="font-size:10px">'+y.name+'</span></div><div style="font-size:11px;color:var(--color-text-secondary);line-height:1.55;margin-top:2px">'+y.desc+'</div>'+(y.rem?'<div style="font-size:10px;color:#534AB7;margin-top:3px;font-weight:500">Remedy: '+y.rem+'</div>':'')+'</div>';});
+    yogSections+='</div>';});
+  var totY=firedYogs.length,posY=firedYogs.filter(function(y){return y.type==='p';}).length,negY=firedYogs.filter(function(y){return y.type==='n';}).length;
+  var missH2=miss.length?miss.map(function(n){return'<div class="ri"><strong>'+n+' — '+PL[n]+':</strong> '+MISS[n]+'</div>';}).join(''):'<div class="db" style="color:#1B5E20">All numbers 1–9 present. Your grid is complete — a rare and auspicious sign.</div>';
+  document.getElementById('tc3').innerHTML=
+  '<div class="card"><h2>Vedic Grid</h2><div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:flex-start">'+gridHTML+gridLegend+'</div>'+
+  '<div style="font-size:11px;color:var(--color-text-secondary);margin-top:.5rem"><span style="display:inline-block;width:12px;height:12px;background:#534AB7;border-radius:2px;vertical-align:middle;margin:0 2px"></span>= present required · <span style="display:inline-block;width:12px;height:12px;background:#FFEBEE;border:1px solid #F48FB1;border-radius:2px;vertical-align:middle;margin:0 2px;font-size:9px;color:#B71C1C;text-align:center;line-height:12px;text-decoration:line-through">n</span>= must be absent · Yogs fire from DOB + Driver('+dr+') + Conductor('+co+')</div></div>'+
+  '<div class="card"><h2>All Yogs Detected — Corrected Present/Absent Logic</h2><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:.75rem"><div class="li"><div class="k">Total Yogs</div><div class="v" style="font-size:18px;color:#534AB7">'+totY+'</div></div><div class="li"><div class="k">Positive</div><div class="v" style="font-size:18px;color:#1B5E20">'+posY+'</div></div><div class="li"><div class="k">Negative/Dosh</div><div class="v" style="font-size:18px;color:#B71C1C">'+negY+'</div></div></div>'+(yogSections||'<div class="db">No Yogs detected for this date combination.</div>')+'</div>'+
+  '<div class="card"><h2>Missing Number Remedies</h2>'+missH2+'</div>'+
+  '<div class="card"><h2>Best Professions — Driver '+dr+'</h2><div class="db">'+NI[dr].prof+'</div></div>';
+
+  // TAB 4: Mahadasha
+  var seq=getMDseq(dr);var y=yr;var mdRows='';var cycles=0;
+  while(y<yr+46&&cycles<2){seq.forEach(function(s){if(y>yr+45)return;var isA=activeMD&&activeMD.p===s.p&&activeMD.sy===y;mdRows+='<tr'+(isA?' class="arow"':'')+'><td>'+(isA?'★ ':'')+PL[s.p]+'</td><td>'+s.y+' yr</td><td>'+y+'</td><td>'+(y+s.y)+'</td></tr>';y+=s.y;});cycles++;}
+  var adH='<div class="db" style="margin-bottom:.5rem">Active Mahadasha: <strong>'+(activeMD?PL[activeMD.p]+' ('+activeMD.sy+'–'+activeMD.ey+')':'None')+'</strong></div>';
+  if(ads.length){adH+='<div style="overflow-x:auto"><table><thead><tr><th>Antardasha Planet</th><th>Duration (months)</th><th>Start Year</th><th>End Year</th><th>Relation</th></tr></thead><tbody>';ads.forEach(function(a){var r=activeMD?prel(activeMD.p,a.p):'n';var isNow=curYr>=a.sy&&curYr<a.ey;adH+='<tr'+(isNow?' class="arow"':'')+'><td>'+(isNow?'★ ':'')+PL[a.p]+'</td><td>'+a.months.toFixed(1)+'</td><td>'+a.sy.toFixed(1)+'</td><td>'+a.ey.toFixed(1)+'</td><td><span class="tg '+rc(r)+'">'+rl(r)+'</span></td></tr>';});adH+='</tbody></table></div>';}
+  var compatH='<div style="overflow-x:auto"><table><thead><tr><th>Mahadasha</th><th>Friendly Antardashas</th><th>Non-friendly</th><th>Neutral</th></tr></thead><tbody>';
+  for(var p=1;p<=9;p++){var mc=MDY_COMPAT[p]||{f:[],n:[],uf:[]};compatH+='<tr><td><strong>'+PL[p]+'</strong></td><td style="font-size:10px;color:#1B5E20">'+mc.f.map(function(n){return PL[n];}).join(', ')+'</td><td style="font-size:10px;color:#B71C1C">'+mc.uf.map(function(n){return PL[n];}).join(', ')+'</td><td style="font-size:10px;color:var(--color-text-secondary)">'+mc.n.map(function(n){return PL[n];}).join(', ')+'</td></tr>';}compatH+='</tbody></table></div>';
+  document.getElementById('tc4').innerHTML='<div class="card"><h2>Mahadasha Sequence — Driver '+dr+' ('+PL[dr]+') | ★ = active</h2><div style="overflow-x:auto"><table><thead><tr><th>Planet</th><th>Duration</th><th>Start</th><th>End</th></tr></thead><tbody>'+mdRows+'</tbody></table></div></div><div class="card"><h2>Active Mahadasha — Antardasha Breakdown | ★ = current period</h2>'+adH+'</div><div class="card"><h2>Mahadasha / Antardasha Compatibility</h2>'+compatH+'</div>';
+
+  // TAB 5
+  var sunNum=sunSign.lord;var moonNum=L2N[moonData.lord]||2;
+  document.getElementById('tc5').innerHTML=
+  '<div class="card gold"><h2>Sun Sign: '+sunSign.n+' — Ruled by '+PLN[sunNum]+'</h2><div class="ng" style="margin-top:.5rem"><div class="nc"><div class="l">Element</div><div class="v" style="font-size:14px">'+sunSign.el+'</div></div><div class="nc"><div class="l">Lord Planet</div><div class="v" style="font-size:14px">'+PLN[sunNum]+'</div></div><div class="nc"><div class="l">Sun Status</div><div class="v" style="font-size:12px">'+(sunSign.ex===1?'Exalted ☀':sunSign.db===1?'Debilitated ↓':'Neutral')+'</div></div><div class="nc"><div class="l">Exalted Planet</div><div class="v" style="font-size:12px">'+(sunSign.ex?PLN[sunSign.ex]:'None')+'</div></div></div><div class="db">'+(sunSign.ex===1?'☀ Sun is exalted (उच्च) in '+sunSign.n+' — leadership, confidence, and vitality are amplified.':sunSign.db===1?'↓ Sun is debilitated (नीच) in '+sunSign.n+' — growth requires extra hard work. Remedy: Chant Aditya Hridaya Stotram 5 times every morning.':'Sun is in '+sunSign.n+' — generally favorable energy for this placement.')+'</div></div>'+
+  '<div class="card"><h2>Sun Numerology — Sun Sign Lord: '+PLN[sunNum]+' (Number '+sunNum+')</h2><div class="db">'+NI[sunNum].desc+'</div><div class="db">'+NI[sunNum].deep+'</div></div>'+
+  '<div class="card green"><h2>Birth Nakshatra: '+moonData.nak+'</h2><div class="ng" style="margin-top:.5rem"><div class="nc"><div class="l">Nakshatra Lord</div><div class="v" style="font-size:14px">'+moonData.lord+'</div><div class="s">Number '+moonNum+'</div></div><div class="nc"><div class="l">Moon Longitude</div><div class="v" style="font-size:12px">'+moonData.lon.toFixed(1)+'°</div></div><div class="nc"><div class="l">Nakshatra #</div><div class="v" style="font-size:14px">'+(moonData.nIdx+1)+' / 27</div></div></div><div class="db">The Nakshatra is where the Moon was at the time of your birth. It reveals your emotional instincts, subconscious mind, and karmic patterns. '+moonData.nak+' is ruled by '+moonData.lord+' (number '+moonNum+') — this shapes your inner emotional world deeply.</div></div>'+
+  '<div class="card"><h2>Moon Numerology — Nakshatra Lord: '+moonData.lord+' (Number '+moonNum+')</h2><div class="db">'+NI[moonNum].desc+'</div><div class="db">'+NI[moonNum].deep+'</div><div class="lg2" style="margin-top:.5rem"><div class="li"><div class="k">Lucky Stone</div><div class="v">'+NI[moonNum].gem+'</div></div><div class="li"><div class="k">Lucky Day</div><div class="v">'+NI[moonNum].day+'</div></div><div class="li"><div class="k">Lucky Color</div><div class="v">'+NI[moonNum].color+'</div></div></div></div>';
+
+  // TAB 6
+  var vimRows=vimSeq.map(function(v){var isA=activeVim&&v.pl===activeVim.pl;return'<tr'+(isA?' class="arow"':'')+'><td>'+(isA?'★ ':'')+v.pl+'</td><td>'+v.yrs+' yrs</td><td>'+v.start+'</td><td>'+v.end+'</td></tr>';}).join('');
+  var avDesc=activeVim?'Currently in <strong>'+activeVim.pl+' Dasha</strong> ('+activeVim.start+'–'+activeVim.end+'). '+NI[L2N[activeVim.pl]||2].desc:'No active dasha detected.';
+  document.getElementById('tc6').innerHTML='<div class="card pink"><h2>Vimshottari Dasha — from Nakshatra: '+moonData.nak+'</h2><div style="font-size:11px;color:var(--color-text-secondary);line-height:1.6">Vimshottari Dasha is a 120-year cycle based on the Moon\'s Nakshatra at birth. ★ = currently active period.</div></div><div class="card"><h2>Active Dasha Reading</h2><div class="db">'+avDesc+'</div></div><div class="card"><h2>Vimshottari Dasha Table — Nakshatra Lord: '+moonData.lord+'</h2><div style="overflow-x:auto"><table><thead><tr><th>Dasha Lord</th><th>Period</th><th>Start Year</th><th>End Year</th></tr></thead><tbody>'+vimRows+'</tbody></table></div></div><div class="card"><h2>Numerology MD vs Vimshottari</h2><div class="db">1. <strong>Numerology Mahadasha</strong> — Driver # = first planet, sequence 1→2→3→4→5→6→7→8→9. This is the primary system used in Vedic Numerology.<br><br>2. <strong>Vimshottari Dasha</strong> — from birth Nakshatra, 120-year cycle. This is the Vedic Astrology system.<br><br>When both systems indicate the same planet as active, the effects are greatly amplified.</div></div>';
+
+  // TAB 7: VEDIC BIRTH CHART
+  var chartSVG=renderNIChart(planets,ascSign,houseMap);
+  // Planet position table
+  var PLANET_LIST_FULL=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+  var EXALT_MAP={Sun:0,Moon:1,Mercury:5,Venus:11,Mars:9,Jupiter:3,Saturn:6};
+  var DEBI_MAP={Sun:6,Moon:7,Mercury:11,Venus:5,Mars:3,Jupiter:9,Saturn:0};
+  function getPlanStatus(p){var s=getSign(planets[p]);if(EXALT_MAP[p]===s)return'<span style="color:#1B5E20;font-weight:600">Exalted ☀</span>';if(DEBI_MAP[p]===s)return'<span style="color:#B71C1C;font-weight:600">Debilitated ↓</span>';var ln=SIGN_LORD[s];if(p===ln)return'<span style="color:#0D47A1;font-weight:600">Own Sign ⭐</span>';return'Neutral';}
+  var planetTableRows='<tr class="arow"><td><strong>Ascendant (Lagna)</strong></td><td>'+SIGNS[ascSign]+' ('+SIGNS_HI[ascSign]+')</td><td>'+getDegInSign(planets.Ascendant).toFixed(2)+'°</td><td>H1</td><td>—</td></tr>';
+  planetTableRows+=PLANET_LIST_FULL.map(function(p){var sig=getSign(planets[p]);var hse=getHouseNum(planets[p],planets.Ascendant);return'<tr><td><strong style="color:'+(PLANET_COLOR[p]||'#333')+'">'+p+'</strong></td><td>'+SIGNS[sig]+' ('+SIGNS_HI[sig]+')</td><td>'+getDegInSign(planets[p]).toFixed(2)+'°</td><td>H'+hse+'</td><td>'+getPlanStatus(p)+'</td></tr>';}).join('');
+  // Predictions HTML
+  var predHTML='';
+  [{key:'personality',title:'🌟 Personality & Nature'},{key:'career',title:'💼 Career & Profession'},{key:'health',title:'❤️ Health & Vitality'},{key:'relationships',title:'💫 Relationships & Marriage'},{key:'wealth',title:'💰 Wealth & Prosperity'},{key:'spirituality',title:'🕉️ Spirituality & Karma'}].forEach(function(sec){
+    predHTML+='<div class="pred-section"><h3>'+sec.title+'</h3>'+predictions[sec.key].map(function(p){return'<div class="pred-item">'+p+'</div>';}).join('')+'</div>';
+  });
+  document.getElementById('tc7').innerHTML=
+  '<div class="card purple"><h2>North Indian Vedic Birth Chart</h2>'+
+  '<div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:.75rem">Lagna (Ascendant): <strong>'+SIGNS[ascSign]+' ('+SIGNS_HI[ascSign]+')</strong> · Lahiri Ayanamsa · Location: '+pob+' ('+pobLat.toFixed(2)+'°N, '+pobLng.toFixed(2)+'°E)</div>'+
+  '<div style="display:flex;justify-content:center;margin:.75rem 0">'+chartSVG+'</div>'+
+  '<div style="font-size:10px;color:var(--color-text-secondary);text-align:center;margin-top:.5rem">H = House · Sign names in Rashi (Hindi) · Planets shown with degree in sign · Su=Sun Mo=Moon Me=Mercury Ve=Venus Ma=Mars Ju=Jupiter Sa=Saturn Ra=Rahu Ke=Ketu</div></div>'+
+  '<div class="card"><h2>Planetary Positions (Sidereal / Vedic — Lahiri Ayanamsa)</h2>'+
+  '<div style="overflow-x:auto"><table><thead><tr><th>Planet</th><th>Sign (Rashi)</th><th>Degree in Sign</th><th>House</th><th>Status</th></tr></thead><tbody>'+planetTableRows+'</tbody></table></div></div>'+
+  '<div class="card"><h2>Vedic Astrological Predictions</h2>'+
+  '<div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:.75rem">Predictions based on planetary positions, house placements, sign lordships and Vedic astrology principles. For birth location: '+pob+'.</div>'+
+  predHTML+'</div>';
+
+  // TAB 8: Remedies
+  var swH=SW_ALL.map(function(s){return'<span class="sw">'+s+'</span>';}).join('');
+  var missR=miss.length?miss.map(function(n){return'<div class="ri"><strong>'+n+' ('+PL[n]+'):</strong> '+MISS[n]+'</div>';}).join(''):'<div class="db" style="color:#1B5E20">Grid is complete. No missing number remedies needed.</div>';
+  document.getElementById('tc8').innerHTML=
+  '<div class="card"><h2>Driver '+dr+' ('+PL[dr]+') — Core Remedies &amp; Attributes</h2><div class="lg2" style="margin-bottom:.5rem"><div class="li"><div class="k">Gemstone</div><div class="v">'+NI[dr].gem+'</div></div><div class="li"><div class="k">Lucky Day</div><div class="v">'+NI[dr].day+'</div></div><div class="li"><div class="k">Colors to Wear</div><div class="v">'+NI[dr].color+'</div></div><div class="li"><div class="k">Avoid Colors</div><div class="v">'+NI[dr].un+'</div></div><div class="li"><div class="k">Metal</div><div class="v">'+NI[dr].metal+'</div></div><div class="li"><div class="k">Remedy Stone</div><div class="v">'+NI[dr].stone+'</div></div></div><div class="db">'+NI[dr].rem+'</div></div>'+
+  '<div class="card"><h2>Conductor '+co+' ('+PL[co]+') Remedies</h2><div class="db">'+NI[co].rem+'</div></div>'+
+  '<div class="card"><h2>Missing Number Remedies</h2>'+missR+'</div>'+
+  '<div class="card"><h2>Personal Year '+py+' ('+PL[py]+') Remedies</h2><div class="lg2"><div class="li"><div class="k">Gemstone</div><div class="v">'+NI[py].gem+'</div></div><div class="li"><div class="k">Lucky Day</div><div class="v">'+NI[py].day+'</div></div><div class="li"><div class="k">Colors</div><div class="v">'+NI[py].color+'</div></div></div></div>'+
+  '<div class="card"><h2>General Remedies</h2><div class="db">• Listen to Vishnu Sahasranama every day.<br>• Add digits of birth year to get a number, then chant that shloka of Vishnu Sahasranamam for 45 days.<br>• Chant "Siddhi [planet name]" for 3 mins each (27 mins daily) for 21 days for any troubling planet.<br>• Visit mandir and sit for at least 30 mins, absorbing the vibrations of the holy place.<br>• All Gayatri Mantras — at least chant from your date of birth to 45 days onward.</div></div>'+
+  '<div class="card"><h2>Switchwords — Chant 3×/day, 5 mins each, before 8am</h2><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:.5rem">Do NOT use in the bathroom or during menstrual cycle. Can chant while walking or driving.</div><div>'+swH+'</div></div>';
+
+  document.getElementById('out').style.display='block';st(0);
+}
+</script>
